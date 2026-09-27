@@ -1,0 +1,548 @@
+/* Fuente pixelada retro (la misma estética de los textos del juego) */
+@import url("https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap");
+
+/* ---------- REINICIO: quita márgenes/espacios raros del navegador ---------- */
+* { box-sizing: border-box; }
+
+/* html/body/#root: ocupan toda la ventana, sin scroll. */
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* body: fondo negro (lo que no es escena = oscuridad),
+   overflow hidden = sin barras de scroll,
+   user-select none = que no se seleccione texto al arrastrar la cuerda. */
+body {
+  background: #000;
+  overflow: hidden;
+  user-select: none;
+}
+
+/* .scene: fondo negro que hace de MARCO y CENTRA el escenario. */
+.scene {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* .frame: el escenario 16:9 escalable.
+   Su width/height los pone React en línea; aquí solo se ancla y recorta. */
+.frame {
+  position: relative;
+  overflow: hidden;
+  background: #000;
+}
+
+/* .game-canvas: el lienzo donde se dibuja el juego.
+   image-rendering pixelated = EL truco del look retro. */
+.game-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+  touch-action: none;
+  image-rendering: pixelated;
+}
+
+/* ---------- MENÚ (arriba a la DERECHA del escenario) ---------- */
+/* .menu-wrap: contenedor del botón + panel.
+   top+bottom = alto definido → el panel puede medir 100% y scrollear.
+   touch-action pan-y = el dedo puede arrastrar la lista en móvil. */
+.menu-wrap {
+  position: absolute;
+  top: calc(var(--ui-size, 14px) * 0.55);
+  right: calc(var(--ui-size, 14px) * 0.6);
+  bottom: calc(var(--ui-size, 14px) * 0.55);
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  font-family: "Press Start 2P", monospace;
+  text-align: right;
+  touch-action: pan-y;
+}
+
+/* .menu-btn: el botoncito "MENU". */
+.menu-btn {
+  font-family: inherit;
+  font-size: calc(var(--ui-size, 14px) * 0.6);
+  letter-spacing: 2px;
+  color: #e8ddc0;
+  background: #17120b;
+  border: 2px solid #cfc6b0;
+  padding: 8px 12px;
+  cursor: pointer;
+  flex: 0 0 auto;
+}
+
+/* .menu-panel: el panel que se despliega (scrolleable en móvil). */
+.menu-panel {
+  background: rgba(23, 18, 11, 0.95);
+  border: 2px solid #cfc6b0;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: calc(var(--ui-size, 14px) * 9.5);
+  max-width: 90vw;
+  flex: 0 1 auto;
+  min-height: 0;
+  max-height: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  overscroll-behavior: contain;
+  text-align: left;
+  scrollbar-width: thin;
+  scrollbar-color: #8f8672 transparent;
+}
+
+/* .menu-row: cada fila del menú (etiqueta + botones/slider). */
+.menu-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: calc(var(--ui-size, 14px) * 0.55);
+  color: #d6cdb4;
+  letter-spacing: 1px;
+  flex: 0 0 auto;
+}
+
+/* .menu-row span: la etiqueta. flex 1 = empuja los controles a la derecha. */
+.menu-row span { flex: 1; }
+
+/* .menu-row button: botoncitos ON/OFF/PISTA/LLUVIA/etc. */
+.menu-row button {
+  font-family: inherit;
+  font-size: calc(var(--ui-size, 14px) * 0.55);
+  letter-spacing: 1px;
+  color: #e8ddc0;
+  background: #241b10;
+  border: 2px solid #8f8672;
+  padding: 6px 8px;
+  cursor: pointer;
+}
+
+/* .active: la opción actualmente elegida se resalta en amarillo. */
+.menu-row button.active {
+  border-color: #ffe9a0;
+  color: #ffe9a0;
+}
+
+/* .menu-row input[type=range]: las BARRAS de volumen. */
+.menu-row input[type="range"] {
+  flex: 1;
+  accent-color: #ffe9a0;
+  height: 14px;
+  cursor: pointer;
+}
+
+/* ---------- SLIDER DE RAYITAS (5 posiciones, sin números) ---------- */
+/* .tick-slider: contenedor relativo donde viven las rayas y el input encima. */
+.tick-slider {
+  position: relative;
+  flex: 1;
+  height: 18px;
+}
+
+/* .tick: cada rayita marcadora (10%, 30%, 50%, 75%, 100%). */
+.tick-slider .tick {
+  position: absolute;
+  top: 50%;
+  width: 2px;
+  height: 8px;
+  background: #6b6558;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+/* .tick.on: la raya donde está plantada la línea deslizante = amarilla y más alta. */
+.tick-slider .tick.on {
+  background: #ffe9a0;
+  height: 12px;
+}
+
+/* el input range: fondo transparente pero con THUMB visible como línea vertical. */
+.tick-slider input[type="range"] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  margin: 0;
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+/* la pista: una línea tenue horizontal (Chrome/Edge/Safari). */
+.tick-slider input[type="range"]::-webkit-slider-runnable-track {
+  height: 2px;
+  background: rgba(207, 198, 176, 0.35);
+}
+
+/* el thumb: la "línea deslizante" vertical amarilla. */
+.tick-slider input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 4px;
+  height: 16px;
+  margin-top: -7px;
+  background: #ffe9a0;
+  border: none;
+  border-radius: 0;
+}
+
+/* equivalente en Firefox. */
+.tick-slider input[type="range"]::-moz-range-track {
+  height: 2px;
+  background: rgba(207, 198, 176, 0.35);
+}
+.tick-slider input[type="range"]::-moz-range-thumb {
+  width: 4px;
+  height: 16px;
+  background: #ffe9a0;
+  border: none;
+  border-radius: 0;
+}
+
+/* ---------- HUD (arriba a la IZQUIERDA del escenario) ---------- */
+.hud {
+  position: absolute;
+  top: calc(var(--ui-size, 14px) * 0.7);
+  left: calc(var(--ui-size, 14px) * 0.8);
+  z-index: 20;
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  pointer-events: none;
+  font-family: "Press Start 2P", monospace;
+  font-size: calc(var(--ui-size, 14px) * 0.65);
+  letter-spacing: 2px;
+  color: #d6cdb4;
+  text-shadow: 0 2px 0 #000;
+}
+
+/* .hud .dim: los contadores secundarios, más apagados. */
+.hud .dim { color: #8f8672; }
+
+/* .debt: cuando estás en deuda, el número se pone ROJO. */
+.hud .debt, .ui .debt { color: #e05252; }
+
+/* ---------- TOAST: cartelito que baja al desbloquear algo ---------- */
+.toast {
+  position: absolute;
+  top: calc(var(--ui-size, 14px) * 2.4);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 30;
+  pointer-events: none;
+  font-family: "Press Start 2P", monospace;
+  font-size: calc(var(--ui-size, 14px) * 0.7);
+  letter-spacing: 2px;
+  color: #ffe9a0;
+  background: rgba(23, 18, 11, 0.92);
+  border: 2px solid #cfc6b0;
+  padding: 10px 16px;
+  text-shadow: 0 2px 0 #000;
+  white-space: nowrap;
+  animation: toast-in 0.35s ease-out;
+}
+
+/* @keyframes toast-in: el cartel cae desde arriba con fade. */
+@keyframes toast-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(-12px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* ---------- AVISO DE POMODORO ---------- */
+.pomodoro-notice {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 100;
+  background: rgba(23, 18, 11, 0.95);
+  border: 3px solid #ffc928;
+  padding: 24px 32px;
+  text-align: center;
+  font-family: "Press Start 2P", monospace;
+  font-size: calc(var(--ui-size, 14px) * 0.7);
+  letter-spacing: 2px;
+  color: #ffc928;
+  text-shadow: 0 2px 0 #000;
+  animation: pomodoro-pulse 1s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+.pomodoro-notice small {
+  display: block;
+  font-size: calc(var(--ui-size, 14px) * 0.5);
+  color: #cfc6b0;
+  margin-top: 8px;
+}
+
+@keyframes pomodoro-pulse {
+  from { transform: translate(-50%, -50%) scale(1); }
+  to { transform: translate(-50%, -50%) scale(1.05); }
+}
+
+/* ---------- PANELES (logros) ---------- */
+/* .overlay: capa oscura que cubre el ESCENARIO. Click fuera = cerrar. */
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* .ach-panel: la cajita con la lista de logros. */
+.ach-panel {
+  background: rgba(23, 18, 11, 0.97);
+  border: 2px solid #cfc6b0;
+  padding: 20px;
+  width: min(92%, 560px);
+  max-height: 85%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  overscroll-behavior: contain;
+  font-family: "Press Start 2P", monospace;
+}
+
+.ach-panel h3 {
+  color: #ffe9a0;
+  font-size: calc(var(--ui-size, 14px) * 0.8);
+  letter-spacing: 2px;
+  margin: 0 0 14px;
+}
+
+/* .ach: cada logro. Gris = bloqueado. */
+.ach {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px;
+  border: 2px solid #3a352c;
+  margin-bottom: 8px;
+  color: #6b6558;
+}
+
+/* .ach.on: logro desbloqueado = amarillo brillante. */
+.ach.on {
+  border-color: #ffe9a0;
+  color: #ffe9a0;
+  background: rgba(255, 233, 160, 0.06);
+}
+
+.ach-name {
+  font-size: calc(var(--ui-size, 14px) * 0.6);
+  letter-spacing: 2px;
+}
+
+.ach-desc { font-size: calc(var(--ui-size, 14px) * 0.5); }
+
+.ach-panel button {
+  font-family: inherit;
+  font-size: calc(var(--ui-size, 14px) * 0.6);
+  letter-spacing: 2px;
+  color: #e8ddc0;
+  background: #17120b;
+  border: 2px solid #cfc6b0;
+  padding: 10px 16px;
+  cursor: pointer;
+  margin-top: 6px;
+}
+
+/* ---------- TIENDA DE BOMBILLAS ---------- */
+.shop-panel {
+  background: rgba(23, 18, 11, 0.97);
+  border: 2px solid #cfc6b0;
+  padding: 24px;
+  width: min(92%, 480px);
+  max-height: 85%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  font-family: "Press Start 2P", monospace;
+  text-align: center;
+}
+
+.shop-panel h3 {
+  color: #ffe9a0;
+  font-size: calc(var(--ui-size, 14px) * 0.85);
+  letter-spacing: 2px;
+  margin: 0 0 8px;
+}
+
+.shop-sub {
+  color: #8f8672;
+  font-size: calc(var(--ui-size, 14px) * 0.5);
+  margin: 0 0 18px;
+}
+
+.shop-section {
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #3a352c;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.shop-section:last-of-type { border-bottom: none; }
+
+.shop-title {
+  color: #cfc6b0;
+  font-size: calc(var(--ui-size, 14px) * 0.55);
+  letter-spacing: 2px;
+  margin-bottom: 4px;
+}
+
+.shop-btn {
+  font-family: inherit;
+  font-size: calc(var(--ui-size, 14px) * 0.55);
+  letter-spacing: 1px;
+  color: #e8ddc0;
+  background: #241b10;
+  border: 2px solid #8f8672;
+  padding: 12px;
+  cursor: pointer;
+  line-height: 1.6;
+  text-align: center;
+}
+.shop-btn small {
+  display: block;
+  font-size: calc(var(--ui-size, 14px) * 0.45);
+  color: #8f8672;
+  margin-top: 2px;
+  letter-spacing: 1px;
+}
+.shop-btn:hover { background: #2f2315; border-color: #ffe9a0; }
+
+/* .reward: botón verde (anuncios / confirmaciones). */
+.shop-btn.reward { border-color: #7fb36d; color: #b9e0a9; }
+.shop-btn.reward:hover { background: #1e2a15; }
+
+/* .premium: botón dorado (quitar anuncios / patreon). */
+.shop-btn.premium { border-color: #ffc928; color: #ffc928; background: #2a1f0a; }
+.shop-btn.premium:hover { background: #3a2a10; }
+
+.shop-hint {
+  color: #8f8672;
+  font-size: calc(var(--ui-size, 14px) * 0.45);
+  margin: 0;
+  letter-spacing: 1px;
+}
+
+.shop-panel > button {
+  font-family: inherit;
+  font-size: calc(var(--ui-size, 14px) * 0.6);
+  letter-spacing: 2px;
+  color: #e8ddc0;
+  background: #17120b;
+  border: 2px solid #cfc6b0;
+  padding: 10px 16px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+/* ---------- ANUNCIO (house-ad) ---------- */
+.ad-overlay { z-index: 60; }
+
+.ad-box {
+  background: #000;
+  border: 3px solid #ffe9a0;
+  padding: 20px;
+  width: min(92%, 420px);
+  text-align: center;
+  font-family: "Press Start 2P", monospace;
+}
+
+.ad-tag {
+  display: inline-block;
+  background: #ffe9a0;
+  color: #000;
+  font-size: calc(var(--ui-size, 14px) * 0.45);
+  padding: 4px 8px;
+  margin-bottom: 12px;
+  letter-spacing: 2px;
+}
+
+.ad-fake {
+  background: #17120b;
+  border: 2px dashed #8f8672;
+  padding: 30px 20px;
+  color: #cfc6b0;
+  font-size: calc(var(--ui-size, 14px) * 0.6);
+  letter-spacing: 2px;
+}
+.ad-fake p { margin: 0 0 6px; }
+.ad-fake .dim { color: #6b6558; font-size: calc(var(--ui-size, 14px) * 0.45); }
+
+/* botón de Patreon dentro del anuncio */
+.ad-fake .shop-btn {
+  margin-top: 12px;
+  width: 100%;
+}
+
+.ad-timer {
+  margin-top: 14px;
+  color: #8f8672;
+  font-size: calc(var(--ui-size, 14px) * 0.5);
+  letter-spacing: 1px;
+}
+
+/* ---------- TEXTOS CENTRALES DEL JUEGO ---------- */
+/* .ui: capa de mensajes. font-size usa --game-text (slider TEXTO),
+   con --ui-size (slider INTERFAZ) de respaldo. */
+.ui {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding-bottom: 3em;
+  gap: 0.6em;
+  pointer-events: none;
+  text-align: center;
+  font-family: "Press Start 2P", monospace;
+  font-size: var(--game-text, var(--ui-size, 14px));
+  letter-spacing: 3px;
+  line-height: 2;
+  color: #d6cdb4;
+  text-shadow: 0 2px 0 #000;
+}
+
+/* .ui .dim: mensajes secundarios, más chicos y apagados. */
+.ui .dim {
+  color: #8f8672;
+  font-size: calc(var(--game-text, var(--ui-size, 14px)) * 0.85);
+}
+
+/* .ui button: el botón "CAMBIAR BOMBILLA" (sí clickeable). */
+.ui button {
+  pointer-events: auto;
+  font: inherit;
+  font-size: calc(var(--game-text, var(--ui-size, 14px)) * 0.95);
+  letter-spacing: 3px;
+  color: #e8ddc0;
+  background: #17120b;
+  border: 2px solid #cfc6b0;
+  padding: 14px 24px;
+  cursor: pointer;
+}
+
+.ui button:hover { background: #241b10; }
