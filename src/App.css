@@ -1,10 +1,7 @@
-/* Fuente pixelada retro (la misma estética de los textos del juego) */
 @import url("https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap");
 
-/* ---------- REINICIO: quita márgenes/espacios raros del navegador ---------- */
 * { box-sizing: border-box; }
 
-/* html/body/#root: ocupan toda la ventana, sin scroll. */
 html, body, #root {
   width: 100%;
   height: 100%;
@@ -12,16 +9,12 @@ html, body, #root {
   padding: 0;
 }
 
-/* body: fondo negro (lo que no es escena = oscuridad),
-   overflow hidden = sin barras de scroll,
-   user-select none = que no se seleccione texto al arrastrar la cuerda. */
 body {
   background: #000;
   overflow: hidden;
   user-select: none;
 }
 
-/* .scene: fondo negro que hace de MARCO y CENTRA el escenario. */
 .scene {
   position: relative;
   width: 100vw;
@@ -33,16 +26,12 @@ body {
   justify-content: center;
 }
 
-/* .frame: el escenario 16:9 escalable.
-   Su width/height los pone React en línea; aquí solo se ancla y recorta. */
 .frame {
   position: relative;
   overflow: hidden;
   background: #000;
 }
 
-/* .game-canvas: el lienzo donde se dibuja el juego.
-   image-rendering pixelated = EL truco del look retro. */
 .game-canvas {
   position: absolute;
   inset: 0;
@@ -53,10 +42,6 @@ body {
   image-rendering: pixelated;
 }
 
-/* ---------- MENÚ (arriba a la DERECHA del escenario) ---------- */
-/* .menu-wrap: contenedor del botón + panel.
-   top+bottom = alto definido → el panel puede medir 100% y scrollear.
-   touch-action pan-y = el dedo puede arrastrar la lista en móvil. */
 .menu-wrap {
   position: absolute;
   top: calc(var(--ui-size, 14px) * 0.55);
@@ -72,7 +57,6 @@ body {
   touch-action: pan-y;
 }
 
-/* .menu-btn: el botoncito "MENU". */
 .menu-btn {
   font-family: inherit;
   font-size: calc(var(--ui-size, 14px) * 0.6);
@@ -85,7 +69,6 @@ body {
   flex: 0 0 auto;
 }
 
-/* .menu-panel: el panel que se despliega (scrolleable en móvil). */
 .menu-panel {
   background: rgba(23, 18, 11, 0.95);
   border: 2px solid #cfc6b0;
@@ -107,7 +90,6 @@ body {
   scrollbar-color: #8f8672 transparent;
 }
 
-/* .menu-row: cada fila del menú (etiqueta + botones/slider). */
 .menu-row {
   display: flex;
   align-items: center;
@@ -118,10 +100,8 @@ body {
   flex: 0 0 auto;
 }
 
-/* .menu-row span: la etiqueta. flex 1 = empuja los controles a la derecha. */
 .menu-row span { flex: 1; }
 
-/* .menu-row button: botoncitos ON/OFF/PISTA/LLUVIA/etc. */
 .menu-row button {
   font-family: inherit;
   font-size: calc(var(--ui-size, 14px) * 0.55);
@@ -133,13 +113,11 @@ body {
   cursor: pointer;
 }
 
-/* .active: la opción actualmente elegida se resalta en amarillo. */
 .menu-row button.active {
   border-color: #ffe9a0;
   color: #ffe9a0;
 }
 
-/* .menu-row input[type=range]: las BARRAS de volumen. */
 .menu-row input[type="range"] {
   flex: 1;
   accent-color: #ffe9a0;
@@ -147,15 +125,12 @@ body {
   cursor: pointer;
 }
 
-/* ---------- SLIDER DE RAYITAS (5 posiciones, sin números) ---------- */
-/* .tick-slider: contenedor relativo donde viven las rayas y el input encima. */
 .tick-slider {
   position: relative;
   flex: 1;
   height: 18px;
 }
 
-/* .tick: cada rayita marcadora (10%, 30%, 50%, 75%, 100%). */
 .tick-slider .tick {
   position: absolute;
   top: 50%;
@@ -166,13 +141,11 @@ body {
   pointer-events: none;
 }
 
-/* .tick.on: la raya donde está plantada la línea deslizante = amarilla y más alta. */
 .tick-slider .tick.on {
   background: #ffe9a0;
   height: 12px;
 }
 
-/* el input range: fondo transparente pero con THUMB visible como línea vertical. */
 .tick-slider input[type="range"] {
   position: absolute;
   inset: 0;
@@ -184,13 +157,11 @@ body {
   cursor: pointer;
 }
 
-/* la pista: una línea tenue horizontal (Chrome/Edge/Safari). */
 .tick-slider input[type="range"]::-webkit-slider-runnable-track {
   height: 2px;
   background: rgba(207, 198, 176, 0.35);
 }
 
-/* el thumb: la "línea deslizante" vertical amarilla. */
 .tick-slider input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   width: 4px;
@@ -201,7 +172,6 @@ body {
   border-radius: 0;
 }
 
-/* equivalente en Firefox. */
 .tick-slider input[type="range"]::-moz-range-track {
   height: 2px;
   background: rgba(207, 198, 176, 0.35);
@@ -214,7 +184,6 @@ body {
   border-radius: 0;
 }
 
-/* ---------- HUD (arriba a la IZQUIERDA del escenario) ---------- */
 .hud {
   position: absolute;
   top: calc(var(--ui-size, 14px) * 0.7);
@@ -231,13 +200,9 @@ body {
   text-shadow: 0 2px 0 #000;
 }
 
-/* .hud .dim: los contadores secundarios, más apagados. */
 .hud .dim { color: #8f8672; }
-
-/* .debt: cuando estás en deuda, el número se pone ROJO. */
 .hud .debt, .ui .debt { color: #e05252; }
 
-/* ---------- TOAST: cartelito que baja al desbloquear algo ---------- */
 .toast {
   position: absolute;
   top: calc(var(--ui-size, 14px) * 2.4);
@@ -257,13 +222,11 @@ body {
   animation: toast-in 0.35s ease-out;
 }
 
-/* @keyframes toast-in: el cartel cae desde arriba con fade. */
 @keyframes toast-in {
   from { opacity: 0; transform: translateX(-50%) translateY(-12px); }
   to { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
 
-/* ---------- AVISO DE POMODORO ---------- */
 .pomodoro-notice {
   position: absolute;
   top: 50%;
@@ -295,8 +258,6 @@ body {
   to { transform: translate(-50%, -50%) scale(1.05); }
 }
 
-/* ---------- PANELES (logros) ---------- */
-/* .overlay: capa oscura que cubre el ESCENARIO. Click fuera = cerrar. */
 .overlay {
   position: absolute;
   inset: 0;
@@ -307,7 +268,6 @@ body {
   justify-content: center;
 }
 
-/* .ach-panel: la cajita con la lista de logros. */
 .ach-panel {
   background: rgba(23, 18, 11, 0.97);
   border: 2px solid #cfc6b0;
@@ -328,7 +288,6 @@ body {
   margin: 0 0 14px;
 }
 
-/* .ach: cada logro. Gris = bloqueado. */
 .ach {
   display: flex;
   flex-direction: column;
@@ -339,7 +298,6 @@ body {
   color: #6b6558;
 }
 
-/* .ach.on: logro desbloqueado = amarillo brillante. */
 .ach.on {
   border-color: #ffe9a0;
   color: #ffe9a0;
@@ -365,7 +323,6 @@ body {
   margin-top: 6px;
 }
 
-/* ---------- TIENDA DE BOMBILLAS ---------- */
 .shop-panel {
   background: rgba(23, 18, 11, 0.97);
   border: 2px solid #cfc6b0;
@@ -430,11 +387,9 @@ body {
 }
 .shop-btn:hover { background: #2f2315; border-color: #ffe9a0; }
 
-/* .reward: botón verde (anuncios / confirmaciones). */
 .shop-btn.reward { border-color: #7fb36d; color: #b9e0a9; }
 .shop-btn.reward:hover { background: #1e2a15; }
 
-/* .premium: botón dorado (quitar anuncios / patreon). */
 .shop-btn.premium { border-color: #ffc928; color: #ffc928; background: #2a1f0a; }
 .shop-btn.premium:hover { background: #3a2a10; }
 
@@ -457,7 +412,6 @@ body {
   margin-top: 10px;
 }
 
-/* ---------- ANUNCIO (house-ad) ---------- */
 .ad-overlay { z-index: 60; }
 
 .ad-box {
@@ -490,7 +444,6 @@ body {
 .ad-fake p { margin: 0 0 6px; }
 .ad-fake .dim { color: #6b6558; font-size: calc(var(--ui-size, 14px) * 0.45); }
 
-/* botón de Patreon dentro del anuncio */
 .ad-fake .shop-btn {
   margin-top: 12px;
   width: 100%;
@@ -503,9 +456,90 @@ body {
   letter-spacing: 1px;
 }
 
-/* ---------- TEXTOS CENTRALES DEL JUEGO ---------- */
-/* .ui: capa de mensajes. font-size usa --game-text (slider TEXTO),
-   con --ui-size (slider INTERFAZ) de respaldo. */
+.collab-panel {
+  background: rgba(23, 18, 11, 0.97);
+  border: 2px solid #cfc6b0;
+  padding: 24px;
+  width: min(92%, 520px);
+  max-height: 85%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  font-family: "Press Start 2P", monospace;
+  text-align: center;
+}
+
+.collab-panel h3 {
+  color: #ffe9a0;
+  font-size: calc(var(--ui-size, 14px) * 0.85);
+  letter-spacing: 2px;
+  margin: 0 0 8px;
+}
+
+.collab-sub {
+  color: #8f8672;
+  font-size: calc(var(--ui-size, 14px) * 0.5);
+  margin: 0 0 20px;
+}
+
+.collab-section {
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #3a352c;
+}
+
+.collab-tier {
+  color: #cfc6b0;
+  font-size: calc(var(--ui-size, 14px) * 0.6);
+  letter-spacing: 2px;
+  margin-bottom: 10px;
+}
+
+.collab-names {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.collab-names span {
+  background: #241b10;
+  border: 2px solid #8f8672;
+  padding: 6px 10px;
+  font-size: calc(var(--ui-size, 14px) * 0.5);
+  color: #e8ddc0;
+  letter-spacing: 1px;
+}
+
+.collab-names.gold span {
+  border-color: #ffc928;
+  color: #ffc928;
+  background: #2a1f0a;
+}
+
+.collab-names span.empty {
+  border-style: dashed;
+  color: #6b6558;
+}
+
+.collab-cta {
+  color: #ffc928;
+  font-size: calc(var(--ui-size, 14px) * 0.6);
+  margin: 16px 0 12px;
+}
+
+.collab-panel button {
+  font-family: inherit;
+  font-size: calc(var(--ui-size, 14px) * 0.6);
+  letter-spacing: 2px;
+  color: #e8ddc0;
+  background: #17120b;
+  border: 2px solid #cfc6b0;
+  padding: 10px 16px;
+  cursor: pointer;
+  margin-top: 12px;
+}
+
 .ui {
   position: absolute;
   inset: 0;
@@ -526,13 +560,11 @@ body {
   text-shadow: 0 2px 0 #000;
 }
 
-/* .ui .dim: mensajes secundarios, más chicos y apagados. */
 .ui .dim {
   color: #8f8672;
   font-size: calc(var(--game-text, var(--ui-size, 14px)) * 0.85);
 }
 
-/* .ui button: el botón "CAMBIAR BOMBILLA" (sí clickeable). */
 .ui button {
   pointer-events: auto;
   font: inherit;
