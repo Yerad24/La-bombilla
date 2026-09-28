@@ -169,12 +169,13 @@ const PAYMENT_LINKS = {
   removeAds: "https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=cordobadavid45@gmail.com&item_name=Quitar+Anuncios&amount=2.00&currency_code=USD&return=https://la-bombilla-kappa.vercel.app/?grant=removeAds",
 };
 
-// 💖 Tu página de apoyo (Patreon / Ko-fi). Vacío = avisa al pulsar.
-const PATREON_URL = ""; // ej: "https://ko-fi.com/tunombre"
+// 💖 TU PÁGINA DE PATREON REAL — conectada al menú, la tienda y el house-ad
+const PATREON_URL = "https://www.patreon.com/cw/Pix_World";
 
 // 📺 Proveedor de anuncios: "none" | "poki" | "crazygames"
-// Con "none" se muestra un house-ad (promo tuya con tu Patreon),
-// que es lo que hacen los juegos reales cuando ninguna red rellena el slot.
+// Con "none" se muestra un house-ad que promociona TU Patreon
+// (slot de ingresos real). Cuando Poki/CrazyGames te aprueben,
+// cambia a "poki" o "crazygames" y el SDK real se carga solo.
 const AD_PROVIDER = "none";
 
 // ---------- LOGROS (31) ----------
@@ -2409,7 +2410,7 @@ function App() {
       });
       return;
     }
-    // house-ad: promo real de tu Patreon/tienda
+    // house-ad: promo real de tu Patreon
     setAdState({ left: AD_HOUSE_SECONDS, mode });
   };
 
@@ -2455,12 +2456,8 @@ function App() {
   // ============================================================
   // 💳 COMPRA REAL POR PAYPAL (SIN BOTÓN DE HONOR)
   // ------------------------------------------------------------
-  // Al hacer click:
-  //  1) muestra toast "ABRIENDO PAYPAL..."
-  //  2) abre PayPal en pestaña nueva con el monto ya escrito
-  //  3) al terminar el pago, PayPal redirige al juego con ?grant=...
-  //  4) el useEffect de activación entrega las bombillas solo
-  // Ya NO existe el botón "YA PAGUÉ — ACTIVAR".
+  // Al hacer click: abre PayPal con el monto escrito; al pagar,
+  // PayPal regresa al juego con ?grant=... y se activa SOLO.
   // ============================================================
   const buyPack = (pack) => {
     const link = PAYMENT_LINKS[pack.id];
@@ -2482,6 +2479,7 @@ function App() {
     window.open(link, "_blank");
   };
 
+  // abre tu Patreon real (menú, tienda y house-ad)
   const openPatreon = () => {
     if (PATREON_URL) window.open(PATREON_URL, "_blank");
     else showToast("CONFIGURA PATREON_URL");
@@ -2747,8 +2745,7 @@ function App() {
                     💡 {p.bulbs} bombillas · ${p.price.toFixed(2)}
                   </button>
                 ))}
-                {/* Ya NO está el botón "YA PAGUÉ — ACTIVAR": al pagar,
-                    PayPal regresa solo al juego y se activa. */}
+                {/* Sin botón de honor: al pagar, PayPal regresa solo y activa */}
                 <p className="shop-hint">🔒 Al pagar, PayPal te regresa al juego y se activa solo.</p>
               </div>
 
@@ -2771,13 +2768,13 @@ function App() {
           </div>
         )}
 
-        {/* ---------- ANUNCIO (house-ad con promo real de tu Patreon) ---------- */}
+        {/* ---------- ANUNCIO (house-ad que promociona TU Patreon real) ---------- */}
         {adState && (
           <div className="overlay ad-overlay">
             <div className="ad-box">
               <div className="ad-tag">ANUNCIO</div>
               <div className="ad-fake">
-                <p>💖 LA BOMBILLA</p>
+                <p>💖 PIXWORLD</p>
                 <p className="dim">Hecho con amor y bombillas rotas en Popayán 🇨🇴</p>
                 <button className="shop-btn premium" onClick={openPatreon}>
                   APOYAR EN PATREON
