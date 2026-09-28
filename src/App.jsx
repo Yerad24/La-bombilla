@@ -2,147 +2,171 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import "./App.css";
 
 // ============================================================
-// CONFIGURACIÓN GENERAL
+// CONFIGURACIÓN GENERAL — todos los "números de diseño" del juego.
+// Cambia valores aquí sin tocar la lógica.
 // ============================================================
 
+// ---------- ESCENARIO FIJO ----------
+// El juego se dibuja SIEMPRE en esta resolución interna (1920x1080).
+// El CSS escala el canvas como si fuera una imagen: idéntico en cualquier pantalla.
 const DESIGN_W = 1920;
 const DESIGN_H = 1080;
 
+// ---------- SLIDERS DE TAMAÑO (5 posiciones sin números) ----------
+// Cada slider del menú usa estos 5 pasos: 10%, 30%, 50%, 75%, 100%.
 const SIZE_STEPS = [0.1, 0.3, 0.5, 0.75, 1];
-const SIZE_DEFAULT = 4;
+const SIZE_DEFAULT = 4; // posición inicial = índice 4 = 100%
 
-const PIXEL = 6;
-const ROOM_ZOOM = 1.15;
-const DARKNESS = 0.94;
-const VIGNETTE = 0.60;
+// ---------- PANTALLA Y AMBIENTE ----------
+const PIXEL = 6;        // tamaño del "píxel" interno (look retro)
+const ROOM_ZOOM = 1.15; // zoom de la imagen de la habitación
+const DARKNESS = 0.94;  // oscuridad con la luz apagada (0 = visible, 1 = negro)
+const VIGNETTE = 0.60;  // oscurecido de bordes (viñeta)
 
-const UI_TEXT_SIZE = 26;
+// ---------- TEXTOS ----------
+const UI_TEXT_SIZE = 26; // tamaño base; los sliders lo multiplican
 
-const BULB_Y_RATIO = 0.26;
-const BULB_RADIUS = 111;
+// ---------- BOMBILLA ----------
+const BULB_Y_RATIO = 0.26; // altura de la bombilla (fracción de la habitación)
+const BULB_RADIUS = 111;   // radio base (el slider BOMBILLA lo multiplica)
 
-const ROPE_END_RATIO = 0.60;
-const ROPE_THICKNESS = 4;
-const ROPE_SEGMENTS = 19;
-const ROPE_REACH = 800;
-const PULL_SIZE = 21;
+// ---------- CUERDA Y TIRADOR ----------
+const ROPE_END_RATIO = 0.60; // altura de reposo del tirador
+const ROPE_THICKNESS = 4;    // grosor de la cuerda
+const ROPE_SEGMENTS = 19;    // segmentos de física (más = más suave)
+const ROPE_REACH = 800;      // alcance máximo del arrastre
+const PULL_SIZE = 21;        // radio del tirador (el mango)
 
-const PULL_THRESHOLD = 150;
-const WARN_PULL = 120;
-const BREAK_PULL = 240;
+// ---------- TIRÓN (tensión de la cuerda) ----------
+const PULL_THRESHOLD = 150; // tensión para encender/apagar
+const WARN_PULL = 120;      // tensión de advertencia (rojo + temblor + cristalitos)
+const BREAK_PULL = 240;     // tensión de explosión
 
-const FIREFLY_COUNT = 36;
-const FIREFLY_SIZE_MIN = 8;
-const FIREFLY_SIZE_MAX = 15;
-const FIREFLY_AURA = 30;
-const FIREFLY_WALL_RATIO = 0.4;
-const FIREFLY_APPROACH = 0.55;
-const FIREFLY_JUMP = 4.5;
-const FIREFLY_SCATTER = 7;
-const FIREFLY_DISPERSE = 1.5;
-const FIREFLY_WALL_PULL = 0.02;
+// ---------- LUCIÉRNAGAS ----------
+const FIREFLY_COUNT = 36;       // cantidad
+const FIREFLY_SIZE_MIN = 8;     // tamaño mínimo
+const FIREFLY_SIZE_MAX = 15;    // tamaño máximo
+const FIREFLY_AURA = 30;        // radio del aura luminosa
+const FIREFLY_WALL_RATIO = 0.4; // fracción que se pega a las paredes
+const FIREFLY_APPROACH = 0.55;  // aceleración hacia la luz
+const FIREFLY_JUMP = 4.5;       // impulso del "golpecito" al vidrio
+const FIREFLY_SCATTER = 7;      // huida al explotar
+const FIREFLY_DISPERSE = 1.5;   // dispersión al apagar
+const FIREFLY_WALL_PULL = 0.02; // lentitud de regreso a la pared
 
-const ROPE_GRAVITY = 1.73;
-const ROPE_DAMPING = 0.92;
+// ---------- FÍSICA DE LA CUERDA ----------
+const ROPE_GRAVITY = 1.73; // gravedad (peso al caer)
+const ROPE_DAMPING = 0.92; // amortiguación al soltar (evita rebotes raros)
 
-const DUST_COUNT = 8;
-const DUST_FALL_MIN = 0.3;
-const DUST_FALL_MAX = 0.8;
-const DUST_SIZE_MIN = 4;
-const DUST_SIZE_MAX = 8;
-const DUST_ALPHA_MAX = 0.7;
-const DUST_INITIAL_COUNT = 25;
+// ---------- POLVO EN LA LUZ ----------
+const DUST_COUNT = 8;          // motas simultáneas
+const DUST_FALL_MIN = 0.3;     // caída mínima
+const DUST_FALL_MAX = 0.8;     // caída máxima
+const DUST_SIZE_MIN = 4;       // tamaño mínimo
+const DUST_SIZE_MAX = 8;       // tamaño máximo
+const DUST_ALPHA_MAX = 0.7;    // opacidad máxima
+const DUST_INITIAL_COUNT = 25; // motas al instante al encender
 
-const CONE_AURA_LAYERS = 4;
-const CONE_AURA_SIZE = 1.8;
-const CONE_EDGE_SOFTNESS = 12;
+// ---------- AURA DEL CONO ----------
+const CONE_AURA_LAYERS = 4;    // capas de bloom del cono
+const CONE_AURA_SIZE = 1.8;    // (referencia) tamaño del aura
+const CONE_EDGE_SOFTNESS = 12; // suavizado de bordes del cono
 
-const CAT_SIZE = 180;
-const CAT_EYE_GLOW = 6;
-const CAT_WALK_SPEED = 0.07;
-const CAT_FLEE_SPEED = 0.6;
-const CAT_FLOOR_MIN = 0.71;
-const CAT_FLOOR_MAX = 0.92;
-const CAT_MARGIN = 3;
+// ---------- GATO ----------
+const CAT_SIZE = 180;        // tamaño base
+const CAT_EYE_GLOW = 6;      // brillo de ojos en la oscuridad
+const CAT_WALK_SPEED = 0.07; // velocidad al pasear
+const CAT_FLEE_SPEED = 0.6;  // velocidad al huir
+const CAT_FLOOR_MIN = 0.71;  // borde superior de su zona de suelo
+const CAT_FLOOR_MAX = 0.92;  // borde inferior
+const CAT_MARGIN = 3;        // qué tan metido se queda en el cono
 
-const GLASS_TINK_MIN = 1800;
-const GLASS_TINK_MAX = 4400;
+// ---------- CRISTALITOS (sonido de advertencia) ----------
+const GLASS_TINK_MIN = 1800; // frecuencia mínima
+const GLASS_TINK_MAX = 4400; // frecuencia máxima
 
-const STORM_MIN_INTERVAL = 18;
-const STORM_MAX_INTERVAL = 40;
-const STORM_FLASH_DURATION = 0.7;
-const STORM_INTENSITY = 0.8;
-const STORM_THUNDER_MIN = 0.8;
-const STORM_THUNDER_MAX = 2.5;
-const STORM_VOLUME = 0.35;
+// ---------- TORMENTA ----------
+const STORM_MIN_INTERVAL = 18;    // seg mínimos entre relámpagos
+const STORM_MAX_INTERVAL = 40;    // seg máximos
+const STORM_FLASH_DURATION = 0.7; // duración del destello
+const STORM_INTENSITY = 0.8;      // intensidad del destello
+const STORM_THUNDER_MIN = 0.8;    // retardo mínimo del trueno
+const STORM_THUNDER_MAX = 2.5;    // retardo máximo
+const STORM_VOLUME = 0.35;        // volumen base del trueno
 
-const EVENT_MIN_INTERVAL = 15;
-const EVENT_MAX_INTERVAL = 35;
-const EVENT_FLICKER_TIME = 0.5;
+// ---------- EVENTOS ALEATORIOS (el foco falla solo) ----------
+const EVENT_MIN_INTERVAL = 15;  // seg mínimos entre fallos
+const EVENT_MAX_INTERVAL = 35;  // seg máximos
+const EVENT_FLICKER_TIME = 0.5; // duración del parpadeo
 
-const VIBRATE_BREAK = 120;
-const VIBRATE_CLICK = 15;
+// ---------- VIBRACIÓN MÓVIL ----------
+const VIBRATE_BREAK = 120; // ms al explotar
+const VIBRATE_CLICK = 15;  // ms al hacer click
 
-const BOOM_SPARKS = 26;
-const BOOM_SHARDS = 20;
-const BOOM_RING_GROW = 1.9;
+// ---------- EXPLOSIÓN ----------
+const BOOM_SPARKS = 26;     // chispas brillantes
+const BOOM_SHARDS = 20;     // vidrios
+const BOOM_RING_GROW = 1.9; // cuánto crece el anillo (en radios de bombilla)
 
-const AGE_FULL_TIME = 600;
+// ---------- ENVEJECIMIENTO DE LA BOMBILLA ----------
+const AGE_FULL_TIME = 600; // segundos de luz para llegar al 100% de vejez
 
-const RAINBOW_CLICKS = 7;
-const RAINBOW_TIME = 25.29;
-const PARTY_PULSE_SPEED = 6;
-const PARTY_PULSE_AMOUNT = 0.09;
-const PARTY_DANCE_SPEED = 8;
-const PARTY_MUSIC_FILE = "/audio/music/party.mp3";
+// ---------- MODO FIESTA (arcoíris) ----------
+const RAINBOW_CLICKS = 7;        // clicks seguidos en la bombilla para activarlo
+const RAINBOW_TIME = 25.29;      // segundos que dura
+const PARTY_PULSE_SPEED = 6;     // velocidad del bombeo de cámara
+const PARTY_PULSE_AMOUNT = 0.09; // cuánto se acerca la cámara (9%)
+const PARTY_DANCE_SPEED = 8;     // velocidad del baile del gato
+const PARTY_MUSIC_FILE = "/audio/music/party.mp3"; // tu canción de fiesta
 
-const MOTH_SPAWN_INTERVAL_MIN = 180;
-const MOTH_SPAWN_INTERVAL_MAX = 600;
-const MOTH_REWARD = 10;
-const MOTH_SIZE = 12;
-const MOTH_SPEED = 1.8;
+// ---------- POLILLA DORADA (aparece cada 3-10 min) ----------
+const MOTH_SPAWN_INTERVAL_MIN = 180; // seg mínimos para que aparezca
+const MOTH_SPAWN_INTERVAL_MAX = 600; // seg máximos
+const MOTH_REWARD = 10;              // plata que da al atraparla
+const MOTH_SIZE = 12;                // tamaño
+const MOTH_SPEED = 1.8;              // velocidad de vuelo
 
-const POMODORO_TIME = 25 * 60;
-const POMODORO_BREAK_TIME = 5 * 60;
+// ---------- POMODORO (cada 25 min de luz) ----------
+const POMODORO_TIME = 25 * 60;      // seg con luz encendida para completarlo
+const POMODORO_BREAK_TIME = 5 * 60; // (referencia) descanso sugerido
 
 // ---------- ECONOMÍA INTERNA ----------
-const START_BULBS = 5;
-const BULB_PRICE_BASE = 1;
-const BULB_PRICE_AFTER = 5;
-const IDLE_INCOME_SECONDS = 300;
-const IDLE_INCOME_AMOUNT = 1;
-const DAILY_FREE_BULBS = 1;
-const MAX_BULB_STOCK = 10;
-const AD_HOUSE_SECONDS = 5;      // house-ad de respaldo si no hay RESET_LINK
-const RESET_GIFT_BULBS = 2;      // regalo al resetear
-const RESET_GIFT_MONEY = 10;
+const START_BULBS = 5;           // bombillas regaladas al inicio
+const BULB_PRICE_BASE = 1;       // precio con plata del juego al principio
+const BULB_PRICE_AFTER = 5;      // precio después de romper las 5 regaladas
+const IDLE_INCOME_SECONDS = 300; // +$1 cada 5 MINUTOS con la luz encendida
+const IDLE_INCOME_AMOUNT = 1;    // cuánto paga cada ciclo
+const DAILY_FREE_BULBS = 1;      // bombilla gratis cada 24h
+const MAX_BULB_STOCK = 10;       // tope de inventario para la gratis diaria
+const AD_HOUSE_SECONDS = 5;      // duración del house-ad de respaldo
+const RESET_GIFT_BULBS = 2;      // bombillas de regalo al resetear
+const RESET_GIFT_MONEY = 10;     // plata de regalo al resetear
 
 // ============================================================
-// 🔗 ENLACES DE LA TIENDA / MONETIZACIÓN
+// 🔗 ENLACES DE MONETIZACIÓN (lo único que debes editar a mano)
+// ------------------------------------------------------------
+// PATREON_URL : tu página pública de Patreon (colaboradores).
+// PAYPAL_URL  : tu paypal.me para donaciones directas.
+// BULB_LINK   : enlace ouo.io cuyo DESTINO es
+//               https://la-bombilla-kappa.vercel.app/?grant=bulb10
+// RESET_LINK  : enlace ouo.io cuyo DESTINO es
+//               https://la-bombilla-kappa.vercel.app/?grant=reset
+//               (si lo dejas "", el reseteo usa el house-ad de respaldo)
 // ============================================================
-
-// Patreon: apoyo mensual, aparece en COLABORADORES
 const PATREON_URL = "https://www.patreon.com/Pix_World";
-
-// PayPal: donación directa (una sola vez)
 const PAYPAL_URL = "https://paypal.me/Yeison965";
-
-// Enlace acortador para ganar 10 bombillas
-// (destino en ouo.io: https://la-bombilla-kappa.vercel.app/?grant=bulb10)
 const BULB_LINK = "https://ouo.io/J2EfGA";
-
-// 🔗 Enlace acortador para RESETEAR TODO.
-
-const RESET_LINK = "https://ouo.io/t6i2Ix";
+const RESET_LINK = ""; // ej: "https://ouo.io/xxxxxx"
 
 // ============================================================
 // 💛 COLABORADORES — gente que dona en Patreon
 // Edita esta lista cada mes con tus patrones activos.
+// vip = $5 (nombre dorado) · gato = $3 · luciernaga = $1
 // ============================================================
 const COLLABS = {
-  vip: [],        // $5/mes
-  gato: [],       // $3/mes
-  luciernaga: [], // $1/mes
+  vip: [],        // ej: ["Juan Pérez"]
+  gato: [],       // ej: ["María Gómez"]
+  luciernaga: [], // ej: ["Pedro Ruiz"]
 };
 
 // ---------- LOGROS (31) ----------
@@ -180,9 +204,11 @@ const ACH_LIST = [
   { id: "pomodoro5", name: "DISCIPLINADO", desc: "Completa 5 pomodoros" },
 ];
 
+// ---------- ARCHIVOS DE AUDIO (public/audio/) ----------
 const MUSIC_FILES = ["/audio/music/track1.mp3", "/audio/music/track2.mp3"];
 const AMB_FILES = { rain: "/audio/amb/rain.mp3", night: "/audio/amb/night.mp3" };
 
+// ---------- localStorage: leer/guardar sin romperse si falla ----------
 const loadNum = (key, def) => {
   try {
     const v = localStorage.getItem(key);
@@ -198,8 +224,14 @@ const loadJSON = (key, def) => {
 };
 const saveJSON = (key, v) => { try { localStorage.setItem(key, JSON.stringify(v)); } catch {} };
 
+// ============================================================
+// SLIDER DE RAYITAS (5 posiciones, sin números)
+// value = índice 0..4, onChange devuelve el índice elegido.
+// Las rayitas son .tick y la línea deslizante es el thumb del input.
+// ============================================================
 const TickSlider = ({ value, onChange }) => (
   <div className="tick-slider">
+    {/* las 5 rayitas marcadoras, separadas 25% entre sí */}
     {[0, 1, 2, 3, 4].map((i) => (
       <span
         key={i}
@@ -207,6 +239,7 @@ const TickSlider = ({ value, onChange }) => (
         style={{ left: `${i * 25}%` }}
       />
     ))}
+    {/* la línea deslizante encima de las rayitas */}
     <input
       type="range"
       min="0"
@@ -219,33 +252,42 @@ const TickSlider = ({ value, onChange }) => (
 );
 
 function App() {
+  // Ref al <canvas>: el lienzo donde se dibuja TODO el juego
   const canvasRef = useRef(null);
-  const [status, setStatus] = useState("off");
-  const statusRef = useRef("off");
 
+  // Estado de la escena: "off" | "on" | "broken"
+  const [status, setStatus] = useState("off");
+  const statusRef = useRef("off"); // copia para el bucle de dibujo (sin re-renders)
+
+  // ---------- plata, roturas y pomodoros (persistidos) ----------
   const [money, setMoney] = useState(() => loadNum("ptb_money", 5));
   const [brokenTotal, setBrokenTotal] = useState(() => loadNum("ptb_broken", 0));
   const [pomodoros, setPomodoros] = useState(() => loadNum("ptb_pomodoros", 0));
 
-  const [bulbs, setBulbs] = useState(() => loadNum("ptb_bulbs", START_BULBS));
-  const [lastDaily, setLastDaily] = useState(() => loadNum("ptb_daily", 0));
-  const [shopOpen, setShopOpen] = useState(false);
-  const [adState, setAdState] = useState(null); // house-ad de respaldo
+  // ---------- economía / tienda ----------
+  const [bulbs, setBulbs] = useState(() => loadNum("ptb_bulbs", START_BULBS)); // inventario
+  const [lastDaily, setLastDaily] = useState(() => loadNum("ptb_daily", 0));   // última gratis diaria
+  const [shopOpen, setShopOpen] = useState(false);   // panel de tienda abierto
+  const [adState, setAdState] = useState(null);      // { left } = house-ad de respaldo activo
 
+  // ---------- logros ----------
   const [unlocked, setUnlocked] = useState(() => loadJSON("ptb_ach", []));
-  const unlockedRef = useRef(unlocked);
-  const [toast, setToast] = useState(null);
-  const toastT = useRef(null);
-  const [pomodoroNotice, setPomodoroNotice] = useState(false);
+  const unlockedRef = useRef(unlocked); // lista espejo para chequeos rápidos
+  const [toast, setToast] = useState(null); // cartelito superior
+  const toastT = useRef(null);              // timeout del cartelito
+  const [pomodoroNotice, setPomodoroNotice] = useState(false); // aviso gigante de descanso
 
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [sizeOpen, setSizeOpen] = useState(false);
-  const [achOpen, setAchOpen] = useState(false);
-  const [collabOpen, setCollabOpen] = useState(false);
-  const [confirmReset, setConfirmReset] = useState(false);
+  // ---------- paneles ----------
+  const [menuOpen, setMenuOpen] = useState(false);       // menú principal
+  const [sizeOpen, setSizeOpen] = useState(false);       // sub-menú TAMAÑO
+  const [achOpen, setAchOpen] = useState(false);         // panel de logros
+  const [collabOpen, setCollabOpen] = useState(false);   // panel de COLABORADORES
+  const [confirmReset, setConfirmReset] = useState(false); // 2º click = confirmar reset
   const confirmT = useRef(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
+  // ---------- helpers de economía (estables, los usa el motor) ----------
+  // suma/resta plata del juego y guarda en localStorage
   const addMoney = useCallback((n) => {
     setMoney((m) => {
       const next = m + n;
@@ -254,6 +296,7 @@ function App() {
     });
   }, []);
 
+  // suma/resta bombillas del inventario y guarda
   const addBulbs = useCallback((n) => {
     setBulbs((b) => {
       const next = Math.max(0, b + n);
@@ -262,12 +305,14 @@ function App() {
     });
   }, []);
 
+  // muestra un cartelito temporal arriba
   const showToast = useCallback((msg) => {
     setToast(msg);
     clearTimeout(toastT.current);
     toastT.current = setTimeout(() => setToast(null), 3200);
   }, []);
 
+  // desbloquea un logro una sola vez, lo guarda, avisa y paga +$1
   const unlock = useCallback((id, title) => {
     if (unlockedRef.current.includes(id)) return;
     unlockedRef.current = [...unlockedRef.current, id];
@@ -278,6 +323,7 @@ function App() {
   }, [addMoney, showToast]);
 
   // ---------- RESETEO CON REGALO (lo dispara ?grant=reset o el house-ad) ----------
+  // Borra el progreso, regala 2 bombillas + $10 y recarga la página.
   const doReset = useCallback(() => {
     try {
       ["ptb_money", "ptb_broken", "ptb_ach", "ptb_stats", "ptb_pomodoros", "ptb_daily", "ptb_bulbs"]
@@ -288,17 +334,20 @@ function App() {
     window.location.reload();
   }, []);
 
+  // logros de plata (vigilando el saldo)
   useEffect(() => {
     if (money >= 10) unlock("ahorrativo", "AHORRATIVO");
     if (money <= 0) unlock("derrochador", "SIN FONDO");
     if (money <= -10) unlock("deudor10", "PRESTAMISTA HARTO");
   }, [money, unlock]);
 
+  // logros de colección
   useEffect(() => {
     if (unlocked.length >= 10) unlock("coleccionista", "COLECCIONISTA");
     if (unlocked.length >= ACH_LIST.length - 1) unlock("completista", "COMPLETISTA");
   }, [unlocked, unlock]);
 
+  // ---------- bombilla gratis diaria (cada 24h, tope de inventario) ----------
   useEffect(() => {
     const check = () => {
       const now = Date.now();
@@ -314,13 +363,17 @@ function App() {
       }
     };
     check();
-    const id = setInterval(check, 30000);
+    const id = setInterval(check, 30000); // revisa cada 30s por si dejaste la pestaña abierta
     return () => clearInterval(id);
   }, [lastDaily, showToast]);
 
   // ============================================================
   // 🔗 ENTREGA AUTOMÁTICA POR ENLACES ACORTADORES
-  // ?grant=bulb10 → +10 bombillas · ?grant=reset → reseteo con regalo
+  // ------------------------------------------------------------
+  // Cuando el jugador completa un enlace ouo.io, el acortador lo
+  // regresa al juego con la URL cargada de ?grant=...
+  //   ?grant=bulb10 → +10 bombillas
+  //   ?grant=reset  → reseteo con regalo (2 bombillas + $10)
   // Se limpia la URL ANTES de actuar para que no se repita al recargar.
   // ============================================================
   useEffect(() => {
@@ -328,6 +381,7 @@ function App() {
       const params = new URLSearchParams(window.location.search);
       const grant = params.get("grant");
       if (!grant) return;
+      // limpia ?grant= de la URL sin recargar
       params.delete("grant");
       const qs = params.toString();
       window.history.replaceState({}, "", window.location.pathname + (qs ? `?${qs}` : ""));
@@ -351,6 +405,7 @@ function App() {
     return () => clearTimeout(id);
   }, [adState]);
 
+  // ---------- ajustes del menú (persistidos) ----------
   const [settings, setSettings] = useState(() => {
     const s = loadJSON("ptb_settings", null);
     return {
@@ -361,19 +416,20 @@ function App() {
       text: s?.text ?? true,
       storm: s?.storm ?? true,
       size: {
-        text: s?.size?.text ?? SIZE_DEFAULT,
-        bulb: s?.size?.bulb ?? SIZE_DEFAULT,
-        fly: s?.size?.fly ?? SIZE_DEFAULT,
-        ui: s?.size?.ui ?? SIZE_DEFAULT,
+        text: s?.size?.text ?? SIZE_DEFAULT, // slider TEXTO
+        bulb: s?.size?.bulb ?? SIZE_DEFAULT, // slider BOMBILLA (+cuerda)
+        fly: s?.size?.fly ?? SIZE_DEFAULT,   // slider LUCIÉRNAGAS
+        ui: s?.size?.ui ?? SIZE_DEFAULT,     // slider INTERFAZ
       },
       vol: { music: 0.5, sfx: 0.8, amb: 0.5, ...(s?.vol || {}) },
     };
   });
-  const sfxRef = useRef(settings.sfx);
-  const volRef = useRef(settings.vol);
-  const stormRef = useRef(settings.storm);
-  const sizeRef = useRef({ bulb: 1, fly: 1 });
+  const sfxRef = useRef(settings.sfx);     // ¿efectos encendidos? (lo lee el motor)
+  const volRef = useRef(settings.vol);     // volúmenes (los lee el motor)
+  const stormRef = useRef(settings.storm); // ¿tormenta activada? (lo lee el motor)
+  const sizeRef = useRef({ bulb: 1, fly: 1 }); // escalas (las lee el motor)
 
+  // guarda ajustes y sincroniza los refs que usa el motor
   useEffect(() => {
     saveJSON("ptb_settings", settings);
     sfxRef.current = settings.sfx;
@@ -388,6 +444,7 @@ function App() {
   const setSize = (key, idx) =>
     setSettings((s) => ({ ...s, size: { ...s.size, [key]: idx } }));
 
+  // ---------- tamaño del frame (siempre 16:9, centrado en la ventana) ----------
   const [frame, setFrame] = useState({ w: DESIGN_W, h: DESIGN_H });
   useEffect(() => {
     const f = () => {
@@ -403,19 +460,25 @@ function App() {
     };
   }, []);
 
+  // ---------- tamaños de texto ----------
+  // INTERFAZ = HUD/menú/toast/logros (--ui-size)
+  // TEXTO = mensajes centrales (--game-text)
   const uiSize = Math.max(6, Math.round(UI_TEXT_SIZE * (SIZE_STEPS[settings.size.ui] ?? 1)));
   const textSize = Math.max(6, Math.round(UI_TEXT_SIZE * (SIZE_STEPS[settings.size.text] ?? 1)));
 
+  // ---------- audio: música + ambiente ----------
   const musicRef = useRef(null);
   const ambRef = useRef(null);
-  const [started, setStarted] = useState(false);
+  const [started, setStarted] = useState(false); // primer gesto = autoplay permitido
 
+  // el navegador exige un gesto del usuario antes de reproducir audio
   useEffect(() => {
     const f = () => setStarted(true);
     window.addEventListener("pointerdown", f, { once: true });
     return () => window.removeEventListener("pointerdown", f);
   }, []);
 
+  // Reproducción de música (el volumen va aparte para no reiniciar)
   useEffect(() => {
     if (!musicRef.current) {
       musicRef.current = new Audio();
@@ -429,6 +492,7 @@ function App() {
     } else m.pause();
   }, [settings.music, settings.track, started]);
 
+  // MODO FIESTA: el motor avisa para pausar/reanudar la música normal
   useEffect(() => {
     const onParty = (e) => {
       const m = musicRef.current;
@@ -444,6 +508,7 @@ function App() {
     if (musicRef.current) musicRef.current.volume = settings.vol.music;
   }, [settings.vol.music]);
 
+  // Ambiente (clima): lluvia / noche / nada
   useEffect(() => {
     if (!ambRef.current) {
       ambRef.current = new Audio();
@@ -461,55 +526,66 @@ function App() {
     if (ambRef.current) ambRef.current.volume = settings.vol.amb;
   }, [settings.vol.amb]);
 
+  // Limpieza al desmontar: silenciar todo
   useEffect(() => () => {
     if (musicRef.current) musicRef.current.pause();
     if (ambRef.current) ambRef.current.pause();
   }, []);
 
+  // ---------- estado de pantalla completa ----------
   useEffect(() => {
     const f = () => setIsFullscreen(!!document.fullscreenElement);
     document.addEventListener("fullscreenchange", f);
     return () => document.removeEventListener("fullscreenchange", f);
   }, []);
 
+  // mantiene el ref de status sincronizado con el estado
   useEffect(() => {
     statusRef.current = status;
   }, [status]);
 
   // ============================================================
-  // MOTOR DEL JUEGO
+  // MOTOR DEL JUEGO — canvas, física, dibujo, sonido procedural
   // ============================================================
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
 
+    // Canvas invisible donde se compone la habitación iluminada del cono
     const lightCanvas = document.createElement("canvas");
     const lctx = lightCanvas.getContext("2d");
 
+    // Imagen pixel-art de la habitación
     const room = new Image();
 
+    // Coordenadas de diseño SIEMPRE fijas (el CSS escala el resultado)
     let viewW = DESIGN_W, viewH = DESIGN_H;
 
-    let roomR = [0, 0, 0, 0];
-    let bandTop = 0, bandH = 0, bandBottom = 0;
+    // ---------- layout de la habitación ----------
+    let roomR = [0, 0, 0, 0]; // rect [x, y, w, h]
+    let bandTop = 0, bandH = 0, bandBottom = 0; // franja vertical de la habitación
     let pix = PIXEL;
+    // Tamaños escalables por los sliders del menú
     let bulbR = BULB_RADIUS, pullS = PULL_SIZE, ropeT = ROPE_THICKNESS, catS = CAT_SIZE, ffScale = 1;
-    let lastBulb = -1, lastFly = -1;
+    let lastBulb = -1, lastFly = -1; // detectan cambios de slider
 
+    // cámara del modo fiesta (bombeo)
     let camPulse = 0;
     let wasRainbow = false;
     let partyAudio = null;
 
+    // polilla dorada
     let moth = null;
     let mothTimer = MOTH_SPAWN_INTERVAL_MIN + Math.random() * (MOTH_SPAWN_INTERVAL_MAX - MOTH_SPAWN_INTERVAL_MIN);
     let mothGlow = 0;
 
+    // pomodoro + ingreso pasivo
     let pomodoroAccum = 0;
     let idleAccum = 0;
 
     const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-    const bandY = (r) => bandTop + bandH * r;
+    const bandY = (r) => bandTop + bandH * r; // fracción → Y dentro de la habitación
 
     const roomRect = () => {
       const iw = room.naturalWidth || 16, ih = room.naturalHeight || 9;
@@ -518,17 +594,18 @@ function App() {
       return [(viewW - dw) / 2, (viewH - dh) / 2, dw, dh];
     };
 
+    // recalcula franja + tamaños (sliders y carga de imagen)
     const refreshLayout = () => {
       roomR = roomRect();
       bandTop = roomR[1];
       bandH = roomR[3];
       bandBottom = bandTop + bandH;
       pix = PIXEL;
-      bulbR = BULB_RADIUS * sizeRef.current.bulb;
-      ropeT = Math.max(1, ROPE_THICKNESS * sizeRef.current.bulb);
-      pullS = PULL_SIZE * sizeRef.current.bulb;
-      catS = CAT_SIZE;
-      ffScale = sizeRef.current.fly;
+      bulbR = BULB_RADIUS * sizeRef.current.bulb;             // bombilla
+      ropeT = Math.max(1, ROPE_THICKNESS * sizeRef.current.bulb); // grosor de cuerda
+      pullS = PULL_SIZE * sizeRef.current.bulb;               // tirador
+      catS = CAT_SIZE;                                         // gato no escala
+      ffScale = sizeRef.current.fly;                           // luciérnagas
       if (cat) cat.y = clamp(cat.y, bandY(CAT_FLOOR_MIN), bandY(CAT_FLOOR_MAX));
     };
 
@@ -538,6 +615,7 @@ function App() {
     };
     room.src = "/assets/habitacion.webp";
 
+    // ---------- variables vivas ----------
     let mouseX = 0, mouseY = 0;
     let targetX = 0, targetY = 0;
     let dragging = false;
@@ -558,6 +636,7 @@ function App() {
 
     let eventTimer = EVENT_MIN_INTERVAL + Math.random() * (EVENT_MAX_INTERVAL - EVENT_MIN_INTERVAL);
 
+    // estadísticas persistidas (para logros)
     let stats = {
       pulls: 0, meows: 0, rainbows: 0, storms: 0, events: 0, lit: 0, age: 0, moths: 0,
       ...loadJSON("ptb_stats", {}),
@@ -568,19 +647,19 @@ function App() {
     let ons = 0, softStreak = 0;
     let brokenCount = loadNum("ptb_broken", 0);
 
-    let points = [];
-    let fireflies = [];
-    let shards = [];
-    let sparks = [];
-    let dust = [];
-    let boomRing = 0, boomX = 0, boomY = 0;
+    let points = [];    // segmentos de la cuerda (verlet)
+    let fireflies = []; // luciérnagas
+    let shards = [];    // vidrios de la explosión
+    let sparks = [];    // chispas brillantes
+    let dust = [];      // motas de polvo
+    let boomRing = 0, boomX = 0, boomY = 0; // anillo de estallido
 
     let cat = null;
 
     const mix = (a, b, t) => a.map((c, i) => Math.round(c + (b[i] - c) * t));
     const rgb = (c) => `rgb(${c[0]},${c[1]},${c[2]})`;
     const bulbBase = () => ({ x: viewW / 2, y: bandY(BULB_Y_RATIO) });
-    const hueNow = () => (timeSec * 140) % 360;
+    const hueNow = () => (timeSec * 140) % 360; // color ciclando del arcoíris
 
     const ropeNaturalLength = () =>
       bandY(ROPE_END_RATIO) - (bandY(BULB_Y_RATIO) + bulbR);
@@ -602,15 +681,18 @@ function App() {
         dir: -1,
         state: "idle",
         timer: 0,
-        walkPhase: 0,
+        walkPhase: 0, // ¡OJO: dos puntos, no signo igual!
         blinkTimer: 2 + Math.random() * 3,
         hop: 0,
         gone: false,
       };
     };
 
+    // ============================================================
+    // SONIDO — WebAudio (respaldo) + archivos mp3 con volumen global
+    // ============================================================
     let audioCtx = null;
-    let sfxBus = null;
+    let sfxBus = null; // ganancia MAESTRA de los efectos procedurales
 
     const ensureAudio = () => {
       if (!audioCtx) {
@@ -630,9 +712,10 @@ function App() {
       return src;
     };
 
+    // Reproductor de SFX con archivo mp3 + fallback procedural
     const sfxCache = {};
     const playSfx = (name, vol, fallback) => {
-      if (!sfxRef.current) return;
+      if (!sfxRef.current) return; // efectos apagados en el menú
       if (!sfxCache[name]) {
         const a = new Audio(`/audio/sfx/${name}.mp3`);
         a.preload = "auto";
@@ -644,6 +727,7 @@ function App() {
       if (p) p.catch(() => { if (fallback) fallback(); });
     };
 
+    // MÚSICA DE FIESTA: arranca al entrar y se detiene al salir del modo
     const startPartyMusic = () => {
       if (!partyAudio) {
         partyAudio = new Audio(PARTY_MUSIC_FILE);
@@ -651,12 +735,13 @@ function App() {
       }
       partyAudio.volume = volRef.current.music;
       try { partyAudio.currentTime = 0; } catch {}
-      partyAudio.play().catch(() => {});
+      partyAudio.play().catch(() => {}); // si no existe el mp3, simplemente no suena
     };
     const stopPartyMusic = () => {
       if (partyAudio) partyAudio.pause();
     };
 
+    // sonido al atrapar la polilla (subida brillante)
     const procMothCatch = () => {
       if (!audioCtx) return;
       const t = audioCtx.currentTime;
@@ -672,6 +757,7 @@ function App() {
       o.stop(t + 0.35);
     };
 
+    // campanita del pomodoro (3 notas suaves)
     const procPomodoro = () => {
       if (!audioCtx) return;
       const t = audioCtx.currentTime;
@@ -853,6 +939,7 @@ function App() {
       osc.stop(t + 0.3);
     };
 
+    // wrappers: archivo primero, procedural si falta
     const playClickSfx = (on) => playSfx("click", 0.9, () => procClick(on));
     const playBreakSfx = () => playSfx("break", 1, procBreak);
     const playThunderSfx = () => playSfx("thunder", 0.9, procThunder);
@@ -860,6 +947,7 @@ function App() {
     const playMothCatchSfx = () => playSfx("moth", 0.8, procMothCatch);
     const playPomodoroSfx = () => playSfx("pomodoro", 0.7, procPomodoro);
 
+    // cristalitos al jalar fuerte (zona de advertencia)
     const updateGlassSound = () => {
       if (!dragging) return;
       if (statusRef.current === "broken") return;
@@ -872,6 +960,9 @@ function App() {
       }
     };
 
+    // ============================================================
+    // TORMENTA
+    // ============================================================
     const lightningAlpha = () => {
       if (lightningTime <= 0) return 0;
       const t = STORM_FLASH_DURATION - lightningTime;
@@ -889,7 +980,7 @@ function App() {
     };
 
     const updateStorm = (dt) => {
-      if (!stormRef.current) return;
+      if (!stormRef.current) return; // tormenta apagada en el menú
 
       stormTimer -= dt;
       if (stormTimer <= 0 && lightningTime <= 0) {
@@ -938,6 +1029,9 @@ function App() {
       ctx.restore();
     };
 
+    // ============================================================
+    // EVENTOS ALEATORIOS (más frecuentes si la bombilla es vieja)
+    // ============================================================
     const updateRandomEvent = (st, dt) => {
       if (st !== "on" || flickerTime > 0) return;
       eventTimer -= dt * (1 + (stats.age / 100) * 1.5);
@@ -952,11 +1046,14 @@ function App() {
       }
     };
 
+    // ============================================================
+    // CUERDA — cadena de puntos con física verlet
+    // ============================================================
     const createRope = (broken = false) => {
       const { x } = bulbBase();
       const startY = broken
-        ? bandY(BULB_Y_RATIO) - bulbR
-        : bandY(BULB_Y_RATIO) + bulbR;
+        ? bandY(BULB_Y_RATIO) - bulbR   // rota: cuelga del casquillo
+        : bandY(BULB_Y_RATIO) + bulbR;  // sana: del borde inferior
       const endY = broken ? startY + ropeNaturalLength() : bandY(ROPE_END_RATIO);
       const len = (endY - startY) / (ROPE_SEGMENTS - 1);
       points = [];
@@ -966,6 +1063,9 @@ function App() {
       }
     };
 
+    // ============================================================
+    // LUCIÉRNAGAS
+    // ============================================================
     const createFireflies = () => {
       fireflies = [];
       for (let i = 0; i < FIREFLY_COUNT; i++) {
@@ -1010,6 +1110,9 @@ function App() {
       }
     };
 
+    // ============================================================
+    // POLVO
+    // ============================================================
     const floorY = () => bandY(0.92);
 
     const spawnDust = (bx, by) => {
@@ -1078,6 +1181,9 @@ function App() {
       ctx.restore();
     };
 
+    // ============================================================
+    // POLILLA DORADA — aparece rara vez, da $10 al atraparla
+    // ============================================================
     const spawnMoth = () => {
       moth = {
         x: Math.random() * viewW,
@@ -1085,7 +1191,7 @@ function App() {
         vx: (Math.random() - 0.5) * MOTH_SPEED * 2,
         vy: (Math.random() - 0.5) * MOTH_SPEED * 2,
         wingPhase: Math.random() * Math.PI * 2,
-        life: 20,
+        life: 20, // segundos de vida si no la atrapas
       };
     };
 
@@ -1099,9 +1205,10 @@ function App() {
         return;
       }
 
-      moth.wingPhase += dt * 20;
+      moth.wingPhase += dt * 20; // aleteo
       moth.life -= dt;
 
+      // vuelo errático con tope de velocidad
       moth.vx += (Math.random() - 0.5) * 0.3;
       moth.vy += (Math.random() - 0.5) * 0.3;
       const speed = Math.hypot(moth.vx, moth.vy);
@@ -1113,6 +1220,7 @@ function App() {
       moth.x += moth.vx;
       moth.y += moth.vy;
 
+      // rebotes en los bordes
       if (moth.x < 20 || moth.x > viewW - 20) moth.vx *= -1;
       if (moth.y < 20 || moth.y > viewH - 20) moth.vy *= -1;
 
@@ -1120,17 +1228,18 @@ function App() {
       moth.y = clamp(moth.y, 20, viewH - 20);
 
       if (moth.life <= 0) {
-        moth = null;
+        moth = null; // se fue sin que la atraparas
       }
     };
 
     const drawMoth = () => {
       if (!moth) return;
-      mothGlow = (Math.sin(timeSec * 3) + 1) * 0.5;
+      mothGlow = (Math.sin(timeSec * 3) + 1) * 0.5; // brillo pulsante
 
       ctx.save();
       ctx.translate(moth.x, moth.y);
 
+      // aura dorada aditiva
       ctx.globalCompositeOperation = "lighter";
       ctx.globalAlpha = 0.3 + mothGlow * 0.2;
       const aura = ctx.createRadialGradient(0, 0, 1, 0, 0, MOTH_SIZE * 2.5);
@@ -1141,6 +1250,7 @@ function App() {
       ctx.arc(0, 0, MOTH_SIZE * 2.5, 0, Math.PI * 2);
       ctx.fill();
 
+      // alas que aletean
       ctx.globalCompositeOperation = "source-over";
       ctx.globalAlpha = 0.9;
       const wingAngle = Math.sin(moth.wingPhase) * 0.8;
@@ -1160,6 +1270,7 @@ function App() {
       ctx.fill();
       ctx.restore();
 
+      // cuerpo
       ctx.fillStyle = "#daa520";
       ctx.beginPath();
       ctx.ellipse(0, 0, MOTH_SIZE * 0.3, MOTH_SIZE * 0.5, 0, 0, Math.PI * 2);
@@ -1168,6 +1279,7 @@ function App() {
       ctx.restore();
     };
 
+    // click sobre la polilla = +$10 y logro
     const catchMoth = () => {
       if (!moth) return false;
       const d = Math.hypot(mouseX - moth.x, mouseY - moth.y);
@@ -1184,6 +1296,9 @@ function App() {
       return false;
     };
 
+    // ============================================================
+    // GATO (incluye baile en modo fiesta)
+    // ============================================================
     const updateCat = (st, dt) => {
       if (!cat || cat.gone) return;
 
@@ -1192,12 +1307,14 @@ function App() {
 
       if (cat.hop > 0) cat.hop = Math.max(0, cat.hop - dt * 2.5);
 
+      // MODO FIESTA: el gato baila al ritmo
       if (st === "on" && rainbowTime > 0) {
         cat.state = "dance";
-        cat.walkPhase += dt * 14;
-        cat.dir = Math.sin(timeSec * PARTY_PULSE_SPEED) >= 0 ? 1 : -1;
+        cat.walkPhase += dt * 14; // patitas rápidas
+        cat.dir = Math.sin(timeSec * PARTY_PULSE_SPEED) >= 0 ? 1 : -1; // cambia de lado al beat
         return;
       }
+      // se acabó la fiesta: vuelve a su rutina
       if (cat.state === "dance") {
         cat.state = st === "on" ? "sit" : "idle";
         cat.timer = 1;
@@ -1237,7 +1354,7 @@ function App() {
           } else {
             cat.dir = dx > 0 ? 1 : -1;
             cat.x += Math.sign(dx) * speed;
-            cat.y += clamp(dy, -1, 1) * speed * 0.5;
+            cat.y += clamp(dy, -1, 1) * speed * 0.5; // sube/baja SUAVE, sin saltos
             cat.walkPhase += dt * 10;
           }
 
@@ -1255,6 +1372,7 @@ function App() {
       const st = statusRef.current;
       const showBody = st === "on" && cat.state !== "idle";
 
+      // profundidad: más chico lejos (arriba), más grande cerca (abajo)
       const depthT = clamp(
         (cat.y - bandY(CAT_FLOOR_MIN)) / (bandY(CAT_FLOOR_MAX) - bandY(CAT_FLOOR_MIN)),
         0, 1
@@ -1262,6 +1380,7 @@ function App() {
       const depthScale = 0.75 + 0.45 * depthT;
       const u = (catS / 10) * depthScale;
 
+      // baile: saltos al beat, balanceo y giro ligero
       const dancing = cat.state === "dance";
       const beat = timeSec * PARTY_DANCE_SPEED;
       const danceHop = dancing ? -Math.abs(Math.sin(beat)) * u * 2.0 : 0;
@@ -1282,6 +1401,7 @@ function App() {
       const body = "#1c1610";
 
       if (showBody) {
+        // cola que se mece
         ctx.strokeStyle = body;
         ctx.lineWidth = u * 0.8;
         ctx.lineCap = "round";
@@ -1293,21 +1413,25 @@ function App() {
         );
         ctx.stroke();
 
+        // patitas con ciclo de caminar
         ctx.fillStyle = body;
         ctx.fillRect(-u * 2.4 + swing * u * 0.6, -u * 1.2, u * 0.9, u * 1.4);
         ctx.fillRect(-u * 1.2 - swing * u * 0.6, -u * 1.2, u * 0.9, u * 1.4);
         ctx.fillRect(u * 1.0 - swing * u * 0.6, -u * 1.2, u * 0.9, u * 1.4);
         ctx.fillRect(u * 2.0 + swing * u * 0.6, -u * 1.2, u * 0.9, u * 1.4);
 
+        // cuerpo + cabeza + orejas
         ctx.fillRect(-u * 2.8, -u * 2.6 - bob, u * 5.6, u * 1.8);
         ctx.fillRect(u * 1.6, -u * 4.2 - bob, u * 2.6, u * 2.2);
         ctx.fillRect(u * 1.7, -u * 5.0 - bob, u * 0.8, u * 0.9);
         ctx.fillRect(u * 3.2, -u * 5.0 - bob, u * 0.8, u * 0.9);
 
+        // brillo cálido del lomo (luz de la bombilla)
         ctx.fillStyle = "rgba(255,190,110,0.22)";
         ctx.fillRect(-u * 2.8, -u * 2.6 - bob, u * 5.6, u * 0.4);
         ctx.fillRect(u * 1.6, -u * 4.2 - bob, u * 2.6, u * 0.4);
 
+        // ojos brillantes
         ctx.fillStyle = "#ffd54a";
         ctx.shadowColor = "rgba(255,213,74,0.8)";
         ctx.shadowBlur = 6;
@@ -1315,6 +1439,7 @@ function App() {
         ctx.fillRect(u * 3.3, -u * 3.4 - bob, u * 0.6, u * 0.6);
         ctx.shadowBlur = 0;
       } else {
+        // apagado: solo los ojos (con parpadeo)
         if (cat.blinkTimer > 0) {
           ctx.fillStyle = "#ffd54a";
           ctx.shadowColor = "rgba(255,213,74,0.9)";
@@ -1328,6 +1453,9 @@ function App() {
       ctx.restore();
     };
 
+    // ============================================================
+    // ¡PLA! — romper la bombilla
+    // ============================================================
     const breakBulb = () => {
       dragging = false;
       pull = 0;
@@ -1358,7 +1486,7 @@ function App() {
       boomY = y;
       boomRing = 1;
 
-      const k = bulbR / 60;
+      const k = bulbR / 60; // factor de escala de la explosión
 
       shards = [];
       for (let i = 0; i < BOOM_SHARDS; i++) {
@@ -1424,6 +1552,9 @@ function App() {
       ctx.restore();
     };
 
+    // ============================================================
+    // TAMAÑO (buffer fijo; el CSS escala)
+    // ============================================================
     const resize = () => {
       viewW = DESIGN_W;
       viewH = DESIGN_H;
@@ -1437,6 +1568,9 @@ function App() {
       if (!cat) resetCat();
     };
 
+    // ============================================================
+    // MOUSE — mapea pantalla → coordenadas de diseño (compensa el zoom de cámara)
+    // ============================================================
     const updateMouse = (e) => {
       const r = canvas.getBoundingClientRect();
       let x = (e.clientX - r.left) * (viewW / r.width);
@@ -1454,11 +1588,13 @@ function App() {
       ensureAudio();
       updateMouse(e);
 
+      // 1) intentar atrapar la polilla (prioridad máxima)
       if (catchMoth()) return;
 
       const end = points[points.length - 1];
       const nearRope = !!end && Math.hypot(mouseX - end.x, mouseY - end.y) < pullS * 3;
 
+      // 2) acariciar al gato SOLO si no estás intentando agarrar la cuerda
       if (!nearRope && cat && !cat.gone) {
         const cy = cat.y - catS * 0.3;
         if (Math.hypot(mouseX - cat.x, mouseY - cy) < catS * 1.2) {
@@ -1472,6 +1608,7 @@ function App() {
         }
       }
 
+      // 3) clicks seguidos en la BOMBILLA = modo fiesta
       const dBulb = Math.hypot(mouseX - viewW / 2, mouseY - bandY(BULB_Y_RATIO));
       if (dBulb < bulbR * 1.1 && statusRef.current !== "broken") {
         const now = performance.now();
@@ -1488,6 +1625,7 @@ function App() {
         }
       }
 
+      // 4) agarrar la cuerda
       if (nearRope) {
         dragging = true;
         maxStretch = 0;
@@ -1545,6 +1683,7 @@ function App() {
       dragging = false;
       canvas.style.cursor = "default";
 
+      // amortiguación al soltar (evita que la cuerda rebote rara)
       for (let i = 1; i < points.length; i++) {
         const p = points[i];
         p.oldX = p.x - (p.x - p.oldX) * ROPE_DAMPING;
@@ -1579,6 +1718,9 @@ function App() {
       maxStretch = 0;
     };
 
+    // ============================================================
+    // FÍSICA DE LA CUERDA (verlet + restricciones)
+    // ============================================================
     const updatePhysics = (bx, by) => {
       if (!points.length) return;
       const gravity = ROPE_GRAVITY, friction = 0.96;
@@ -1623,6 +1765,9 @@ function App() {
       }
     };
 
+    // ============================================================
+    // HABITACIÓN
+    // ============================================================
     const drawRoomDark = () => {
       if (!room.complete) return;
       ctx.imageSmoothingEnabled = true;
@@ -1796,6 +1941,9 @@ function App() {
       ctx.restore();
     };
 
+    // ============================================================
+    // LUCIÉRNAGAS
+    // ============================================================
     const drawFireflies = (st, bx, by) => {
       const on = st === "on";
 
@@ -1876,6 +2024,9 @@ function App() {
       ctx.restore();
     };
 
+    // ============================================================
+    // CUERDA + MANGO orientado con la física
+    // ============================================================
     const drawRope = () => {
       if (!points.length) return;
 
@@ -1922,6 +2073,9 @@ function App() {
       ctx.restore();
     };
 
+    // ============================================================
+    // BOMBILLA (envejece, se atenúa y se pone arcoíris)
+    // ============================================================
     const drawBulb = (bx, by) => {
       const on = statusRef.current === "on";
       const R = bulbR;
@@ -2013,7 +2167,11 @@ function App() {
       ctx.restore();
     };
 
+    // ============================================================
+    // RENDER — bucle principal a 60fps
+    // ============================================================
     const draw = () => {
+      // si moviste los sliders de bombilla/luciérnagas, recalcula al vuelo
       if (
         room.complete &&
         (sizeRef.current.bulb !== lastBulb || sizeRef.current.fly !== lastFly)
@@ -2028,6 +2186,7 @@ function App() {
       ctx.fillStyle = "#000";
       ctx.fillRect(0, 0, viewW, viewH);
 
+      // CÁMARA DEL MODO FIESTA: bombeo que se acerca y vuelve varias veces
       camPulse = rainbowTime > 0
         ? Math.max(0, Math.sin(timeSec * PARTY_PULSE_SPEED)) * PARTY_PULSE_AMOUNT
         : 0;
@@ -2050,12 +2209,14 @@ function App() {
         if (stats.lit >= 180) unlock("luz180", "LUMINOTERAPIA");
         if (stats.age >= 100) unlock("vieja", "VIEJA CONFIABLE");
 
+        // INGRESO PASIVO: +$1 cada 5 minutos con la luz encendida
         idleAccum += dt;
         if (idleAccum >= IDLE_INCOME_SECONDS) {
           idleAccum = 0;
           addMoney(IDLE_INCOME_AMOUNT);
         }
 
+        // POMODORO: cada 25 min de luz, campanita + aviso de descanso
         pomodoroAccum += dt;
         if (pomodoroAccum >= POMODORO_TIME) {
           pomodoroAccum = 0;
@@ -2080,6 +2241,7 @@ function App() {
 
       if (rainbowTime > 0) rainbowTime -= dt;
 
+      // MÚSICA DE FIESTA: arranca al entrar y se detiene al salir del modo
       if (rainbowTime > 0 && !wasRainbow) {
         wasRainbow = true;
         startPartyMusic();
@@ -2092,10 +2254,12 @@ function App() {
       }
       if (partyAudio && rainbowTime > 0) partyAudio.volume = volRef.current.music;
 
+      // transiciones de estado
       if (lastStatus !== "broken" && st === "broken") scatterFireflies();
       if (lastStatus === "on" && st === "off") disperseFireflies();
       if (lastStatus === "broken" && st !== "broken") {
         createRope(false);
+        // el gato vuelve entrando caminando por una orilla (sin teleport)
         if (cat && cat.gone) {
           cat.gone = false;
           cat.state = "walk";
@@ -2139,7 +2303,7 @@ function App() {
       const bulbOn = st === "on" && (flickerTime <= 0 || Math.sin(flickerTime * 30) > 0);
 
       if (bulbOn) {
-        const dim = 1 - (stats.age / 100) * 0.45;
+        const dim = 1 - (stats.age / 100) * 0.45; // vejez = luz más tenue
         ctx.globalAlpha = (1 - shake * Math.random() * 0.8) * dim;
         drawConeAura(bx, by);
         drawBeam(bx, by);
@@ -2173,6 +2337,9 @@ function App() {
       animationFrame = requestAnimationFrame(draw);
     };
 
+    // ============================================================
+    // EVENTOS
+    // ============================================================
     canvas.addEventListener("pointerdown", onPointerDown);
     canvas.addEventListener("pointermove", onPointerMove);
     canvas.addEventListener("pointerup", onPointerUp);
@@ -2199,8 +2366,10 @@ function App() {
   // ECONOMÍA / TIENDA / COLABORADORES / RESETEO
   // ============================================================
 
+  // precio dinámico: $1 al inicio, $5 después de romper las 5 regaladas
   const bulbPrice = brokenTotal >= START_BULBS ? BULB_PRICE_AFTER : BULB_PRICE_BASE;
 
+  // Reponer bombilla: 1º inventario, 2º plata del juego, 3º tienda
   const changeBulb = () => {
     if (bulbs > 0) {
       addBulbs(-1);
@@ -2215,16 +2384,20 @@ function App() {
     setShopOpen(true);
   };
 
+  // abre tu Patreon en pestaña nueva
   const openPatreon = () => {
     if (PATREON_URL) window.open(PATREON_URL, "_blank");
     else showToast("CONFIGURA PATREON_URL");
   };
 
+  // abre tu PayPal en pestaña nueva (donación directa)
   const openPaypal = () => {
     if (PAYPAL_URL) window.open(PAYPAL_URL, "_blank");
     else showToast("CONFIGURA PAYPAL_URL");
   };
 
+  // abre el enlace ouo.io de las 10 bombillas; al completarlo,
+  // el acortador regresa al juego con ?grant=bulb10 y se entregan solas
   const openBulbLink = () => {
     if (BULB_LINK) {
       showToast("COMPLETA EL ENLACE Y VUELVE...");
@@ -2240,12 +2413,13 @@ function App() {
     setAdState({ left: AD_HOUSE_SECONDS });
   };
 
+  // al cerrar el house-ad: ejecuta el reseteo con regalo
   const claimAdAndReset = () => {
     setAdState(null);
     doReset();
   };
 
-  // RESETEAR TODO: confirmar → enlace ouo → al volver (?grant=reset) se resetea solo
+  // RESETEAR TODO: confirmar → enlace ouo (?grant=reset) → reseteo automático
   const resetAll = () => {
     if (!confirmReset) {
       setConfirmReset(true);
@@ -2263,6 +2437,7 @@ function App() {
     }
   };
 
+  // botón de consuelo: perdona la deuda y devuelve $5
   const forgiveDebt = () => {
     setMoney(5);
     saveNum("ptb_money", 5);
@@ -2279,19 +2454,24 @@ function App() {
   const setVol = (key, value) =>
     setSettings((s) => ({ ...s, vol: { ...s.vol, [key]: value } }));
 
+  // ============================================================
+  // JSX — capa visible
+  // ============================================================
   return (
     <main className="scene">
+      {/* escenario 16:9 centrado; el CSS lo escala como una imagen */}
       <div
         className="frame"
         style={{
           width: `${frame.w}px`,
           height: `${frame.h}px`,
-          "--ui-size": `${uiSize}px`,
-          "--game-text": `${textSize}px`,
+          "--ui-size": `${uiSize}px`,     // tamaño de HUD/menú/toast/logros
+          "--game-text": `${textSize}px`, // tamaño de los mensajes centrales
         }}
       >
         <canvas ref={canvasRef} className="game-canvas" />
 
+        {/* HUD: plata, inventario, roturas y logros */}
         <div className="hud">
           <span className={money < 0 ? "debt" : ""}>${money}</span>
           <span>💡{bulbs}</span>
@@ -2299,6 +2479,7 @@ function App() {
           <span className="dim">LOGROS: {unlocked.length}/{ACH_LIST.length}</span>
         </div>
 
+        {/* aviso gigante de pomodoro */}
         {pomodoroNotice && (
           <div className="pomodoro-notice">
             🍅 POMODORO COMPLETADO<br/>
@@ -2306,6 +2487,7 @@ function App() {
           </div>
         )}
 
+        {/* MENÚ desplegable */}
         <div className="menu-wrap">
           <button className="menu-btn" onClick={() => setMenuOpen((o) => !o)}>
             MENU
@@ -2313,6 +2495,7 @@ function App() {
 
           {menuOpen && (
             <div className="menu-panel">
+              {/* accesos rápidos: tienda y colaboradores */}
               <div className="menu-row">
                 <button onClick={() => { setShopOpen(true); setMenuOpen(false); }}>
                   🛒 TIENDA
@@ -2322,6 +2505,12 @@ function App() {
                 </button>
               </div>
 
+              {/* donación directa */}
+              <div className="menu-row">
+                <button onClick={openPatreon}>💖 PATREON</button>
+              </div>
+
+              {/* sub-menú de tamaños */}
               <div className="menu-row">
                 <button
                   className={sizeOpen ? "active" : ""}
@@ -2352,6 +2541,7 @@ function App() {
                 </>
               )}
 
+              {/* música */}
               <div className="menu-row">
                 <span>MUSICA</span>
                 <button
@@ -2374,6 +2564,7 @@ function App() {
                 />
               </div>
 
+              {/* efectos de sonido */}
               <div className="menu-row">
                 <span>EFECTOS</span>
                 <button
@@ -2392,6 +2583,7 @@ function App() {
                 />
               </div>
 
+              {/* clima / ambiente */}
               <div className="menu-row">
                 <span>CLIMA</span>
                 <button
@@ -2422,6 +2614,7 @@ function App() {
                 />
               </div>
 
+              {/* textos centrales del juego */}
               <div className="menu-row">
                 <span>TEXTO JUEGO</span>
                 <button
@@ -2432,6 +2625,7 @@ function App() {
                 </button>
               </div>
 
+              {/* tormenta */}
               <div className="menu-row">
                 <span>TORMENTA</span>
                 <button
@@ -2442,22 +2636,26 @@ function App() {
                 </button>
               </div>
 
+              {/* pantalla completa */}
               <div className="menu-row">
                 <button onClick={toggleFullscreen}>
                   {isFullscreen ? "SALIR DE PANTALLA" : "PANTALLA COMPLETA"}
                 </button>
               </div>
 
+              {/* logros */}
               <div className="menu-row">
                 <button onClick={() => { setAchOpen(true); setMenuOpen(false); }}>
                   VER LOGROS
                 </button>
               </div>
 
+              {/* perdón de deuda */}
               <div className="menu-row">
                 <button onClick={forgiveDebt}>PERDONAR DEUDA</button>
               </div>
 
+              {/* reseteo con anuncio */}
               <div className="menu-row">
                 <button
                   className={confirmReset ? "active" : ""}
@@ -2470,6 +2668,7 @@ function App() {
           )}
         </div>
 
+        {/* cartelito superior (logros, compras, avisos) */}
         {toast && <div className="toast">{toast}</div>}
 
         {/* ---------- TIENDA (3 enlaces) ---------- */}
@@ -2479,6 +2678,7 @@ function App() {
               <h3>TIENDA</h3>
               <p className="shop-sub">Inventario: 💡{bulbs} · Plata: ${money}</p>
 
+              {/* ganar bombillas con enlace acortador */}
               <div className="shop-section">
                 <button className="shop-btn reward" onClick={openBulbLink}>
                   🔗 GANAR 10 BOMBILLAS<br/>
@@ -2486,6 +2686,7 @@ function App() {
                 </button>
               </div>
 
+              {/* donaciones directas */}
               <div className="shop-section">
                 <button className="shop-btn premium" onClick={openPaypal}>
                   💳 DONAR POR PAYPAL
@@ -2495,6 +2696,7 @@ function App() {
                 </button>
               </div>
 
+              {/* compra con plata del juego */}
               <div className="shop-section">
                 <div className="shop-title">CON PLATA DEL JUEGO</div>
                 <button
@@ -2549,6 +2751,7 @@ function App() {
               <h3>COLABORADORES</h3>
               <p className="collab-sub">Gente que mantiene la luz encendida 💛</p>
 
+              {/* tier VIP ($5) — nombres dorados */}
               <div className="collab-section">
                 <div className="collab-tier">🌈 CARECHIMBA VIP</div>
                 <div className="collab-names gold">
@@ -2558,6 +2761,7 @@ function App() {
                 </div>
               </div>
 
+              {/* tier gato ($3) */}
               <div className="collab-section">
                 <div className="collab-tier">🐈 GATO DE LA BOMBILLA</div>
                 <div className="collab-names">
@@ -2567,6 +2771,7 @@ function App() {
                 </div>
               </div>
 
+              {/* tier luciérnaga ($1) */}
               <div className="collab-section">
                 <div className="collab-tier">💡 LUCIÉRNAGA</div>
                 <div className="collab-names">
