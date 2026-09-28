@@ -13,13 +13,14 @@ const DESIGN_W = 1920;
 const DESIGN_H = 1080;
 
 // ---------- SLIDERS DE TAMAÑO (5 posiciones sin números) ----------
+// Cada slider del menú usa estos 5 pasos: 10%, 30%, 50%, 75%, 100%.
 const SIZE_STEPS = [0.1, 0.3, 0.5, 0.75, 1];
 const SIZE_DEFAULT = 4; // posición inicial = índice 4 = 100%
 
 // ---------- PANTALLA Y AMBIENTE ----------
 const PIXEL = 6;        // tamaño del "píxel" interno (look retro)
 const ROOM_ZOOM = 1.15; // zoom de la imagen de la habitación
-const DARKNESS = 0.94;  // oscuridad con la luz apagada
+const DARKNESS = 0.94;  // oscuridad con la luz apagada (0 = visible, 1 = negro)
 const VIGNETTE = 0.60;  // oscurecido de bordes (viñeta)
 
 // ---------- TEXTOS ----------
@@ -32,80 +33,80 @@ const BULB_RADIUS = 111;   // radio base (el slider BOMBILLA lo multiplica)
 // ---------- CUERDA Y TIRADOR ----------
 const ROPE_END_RATIO = 0.60; // altura de reposo del tirador
 const ROPE_THICKNESS = 4;    // grosor de la cuerda
-const ROPE_SEGMENTS = 19;    // segmentos de física
+const ROPE_SEGMENTS = 19;    // segmentos de física (más = más suave)
 const ROPE_REACH = 800;      // alcance máximo del arrastre
 const PULL_SIZE = 21;        // radio del tirador (el mango)
 
 // ---------- TIRÓN (tensión de la cuerda) ----------
 const PULL_THRESHOLD = 150; // tensión para encender/apagar
-const WARN_PULL = 120;      // tensión de advertencia (rojo + temblor)
+const WARN_PULL = 120;      // tensión de advertencia (rojo + temblor + cristalitos)
 const BREAK_PULL = 240;     // tensión de explosión
 
 // ---------- LUCIÉRNAGAS ----------
-const FIREFLY_COUNT = 36;
-const FIREFLY_SIZE_MIN = 8;
-const FIREFLY_SIZE_MAX = 15;
-const FIREFLY_AURA = 30;
-const FIREFLY_WALL_RATIO = 0.4;
-const FIREFLY_APPROACH = 0.55;
-const FIREFLY_JUMP = 4.5;
-const FIREFLY_SCATTER = 7;
-const FIREFLY_DISPERSE = 1.5;
-const FIREFLY_WALL_PULL = 0.02;
+const FIREFLY_COUNT = 36;       // cantidad
+const FIREFLY_SIZE_MIN = 8;     // tamaño mínimo
+const FIREFLY_SIZE_MAX = 15;    // tamaño máximo
+const FIREFLY_AURA = 30;        // radio del aura luminosa
+const FIREFLY_WALL_RATIO = 0.4; // fracción que se pega a las paredes
+const FIREFLY_APPROACH = 0.55;  // aceleración hacia la luz
+const FIREFLY_JUMP = 4.5;       // impulso del "golpecito" al vidrio
+const FIREFLY_SCATTER = 7;      // huida al explotar
+const FIREFLY_DISPERSE = 1.5;   // dispersión al apagar
+const FIREFLY_WALL_PULL = 0.02; // lentitud de regreso a la pared
 
 // ---------- FÍSICA DE LA CUERDA ----------
-const ROPE_GRAVITY = 1.73;
-const ROPE_DAMPING = 0.92;
+const ROPE_GRAVITY = 1.73; // gravedad (peso al caer)
+const ROPE_DAMPING = 0.92; // amortiguación al soltar (evita rebotes raros)
 
 // ---------- POLVO EN LA LUZ ----------
-const DUST_COUNT = 8;
-const DUST_FALL_MIN = 0.3;
-const DUST_FALL_MAX = 0.8;
-const DUST_SIZE_MIN = 4;
-const DUST_SIZE_MAX = 8;
-const DUST_ALPHA_MAX = 0.7;
-const DUST_INITIAL_COUNT = 25;
+const DUST_COUNT = 8;          // motas simultáneas
+const DUST_FALL_MIN = 0.3;     // caída mínima
+const DUST_FALL_MAX = 0.8;     // caída máxima
+const DUST_SIZE_MIN = 4;       // tamaño mínimo
+const DUST_SIZE_MAX = 8;       // tamaño máximo
+const DUST_ALPHA_MAX = 0.7;    // opacidad máxima
+const DUST_INITIAL_COUNT = 25; // motas al instante al encender
 
 // ---------- AURA DEL CONO ----------
-const CONE_AURA_LAYERS = 4;
-const CONE_AURA_SIZE = 1.8;
-const CONE_EDGE_SOFTNESS = 12;
+const CONE_AURA_LAYERS = 4;    // capas de bloom del cono
+const CONE_AURA_SIZE = 1.8;    // (referencia) tamaño del aura
+const CONE_EDGE_SOFTNESS = 12; // suavizado de bordes del cono
 
 // ---------- GATO ----------
-const CAT_SIZE = 180;
-const CAT_EYE_GLOW = 6;
-const CAT_WALK_SPEED = 0.07;
-const CAT_FLEE_SPEED = 0.6;
-const CAT_FLOOR_MIN = 0.71;
-const CAT_FLOOR_MAX = 0.92;
-const CAT_MARGIN = 3;
+const CAT_SIZE = 180;       // tamaño base
+const CAT_EYE_GLOW = 6;     // brillo de ojos en la oscuridad
+const CAT_WALK_SPEED = 0.07; // velocidad al pasear
+const CAT_FLEE_SPEED = 0.6;  // velocidad al huir
+const CAT_FLOOR_MIN = 0.71;  // borde superior de su zona de suelo
+const CAT_FLOOR_MAX = 0.92;  // borde inferior
+const CAT_MARGIN = 3;        // qué tan metido stays en el cono
 
 // ---------- CRISTALITOS (sonido de advertencia) ----------
-const GLASS_TINK_MIN = 1800;
-const GLASS_TINK_MAX = 4400;
+const GLASS_TINK_MIN = 1800; // frecuencia mínima
+const GLASS_TINK_MAX = 4400; // frecuencia máxima
 
 // ---------- TORMENTA ----------
-const STORM_MIN_INTERVAL = 18;
-const STORM_MAX_INTERVAL = 40;
-const STORM_FLASH_DURATION = 0.7;
-const STORM_INTENSITY = 0.8;
-const STORM_THUNDER_MIN = 0.8;
-const STORM_THUNDER_MAX = 2.5;
-const STORM_VOLUME = 0.35;
+const STORM_MIN_INTERVAL = 18;   // seg mínimos entre relámpagos
+const STORM_MAX_INTERVAL = 40;   // seg máximos
+const STORM_FLASH_DURATION = 0.7; // duración del destello
+const STORM_INTENSITY = 0.8;     // intensidad del destello
+const STORM_THUNDER_MIN = 0.8;   // retardo mínimo del trueno
+const STORM_THUNDER_MAX = 2.5;   // retardo máximo
+const STORM_VOLUME = 0.35;       // volumen base del trueno
 
 // ---------- EVENTOS ALEATORIOS (el foco falla solo) ----------
-const EVENT_MIN_INTERVAL = 15;
-const EVENT_MAX_INTERVAL = 35;
-const EVENT_FLICKER_TIME = 0.5;
+const EVENT_MIN_INTERVAL = 15;  // seg mínimos entre fallos
+const EVENT_MAX_INTERVAL = 35;  // seg máximos
+const EVENT_FLICKER_TIME = 0.5; // duración del parpadeo
 
 // ---------- VIBRACIÓN MÓVIL ----------
-const VIBRATE_BREAK = 120;
-const VIBRATE_CLICK = 15;
+const VIBRATE_BREAK = 120; // ms al explotar
+const VIBRATE_CLICK = 15;  // ms al hacer click
 
 // ---------- EXPLOSIÓN ----------
-const BOOM_SPARKS = 26;
-const BOOM_SHARDS = 20;
-const BOOM_RING_GROW = 1.9;
+const BOOM_SPARKS = 26;     // chispas brillantes
+const BOOM_SHARDS = 20;     // vidrios
+const BOOM_RING_GROW = 1.9; // cuánto crece el anillo (en radios de bombilla)
 
 // ---------- ENVEJECIMIENTO DE LA BOMBILLA ----------
 const AGE_FULL_TIME = 600; // segundos de luz para llegar al 100% de vejez
@@ -116,25 +117,25 @@ const RAINBOW_TIME = 25.29;      // segundos que dura
 const PARTY_PULSE_SPEED = 6;     // velocidad del bombeo de cámara
 const PARTY_PULSE_AMOUNT = 0.09; // cuánto se acerca la cámara (9%)
 const PARTY_DANCE_SPEED = 8;     // velocidad del baile del gato
-const PARTY_MUSIC_FILE = "/audio/music/party.mp3";
+const PARTY_MUSIC_FILE = "/audio/music/party.mp3"; // tu canción de fiesta
 
 // ---------- POLILLA DORADA (aparece cada 3-10 min) ----------
-const MOTH_SPAWN_INTERVAL_MIN = 180;
-const MOTH_SPAWN_INTERVAL_MAX = 600;
-const MOTH_REWARD = 10; // plata que da al atraparla
-const MOTH_SIZE = 12;
-const MOTH_SPEED = 1.8;
+const MOTH_SPAWN_INTERVAL_MIN = 180; // seg mínimos para que aparezca
+const MOTH_SPAWN_INTERVAL_MAX = 600; // seg máximos
+const MOTH_REWARD = 10;              // plata que da al atraparla
+const MOTH_SIZE = 12;                // tamaño
+const MOTH_SPEED = 1.8;              // velocidad de vuelo
 
 // ---------- POMODORO (cada 25 min de luz) ----------
-const POMODORO_TIME = 25 * 60;
-const POMODORO_BREAK_TIME = 5 * 60;
+const POMODORO_TIME = 25 * 60;      // seg con luz encendida para completarlo
+const POMODORO_BREAK_TIME = 5 * 60; // (referencia) descanso sugerido
 
 // ---------- ECONOMÍA / TIENDA ----------
 const START_BULBS = 5;           // bombillas regaladas al inicio
 const BULB_PRICE_BASE = 1;       // precio con plata del juego al principio
 const BULB_PRICE_AFTER = 5;      // precio después de romper las 5 regaladas
 const IDLE_INCOME_SECONDS = 300; // +$1 cada 5 MINUTOS con la luz encendida
-const IDLE_INCOME_AMOUNT = 1;
+const IDLE_INCOME_AMOUNT = 1;    // cuánto paga cada ciclo
 const DAILY_FREE_BULBS = 1;      // bombilla gratis cada 24h
 const MAX_BULB_STOCK = 10;       // tope de inventario para la gratis diaria
 const AD_REWARD_BULBS = 1;       // bombillas por ver un anuncio
@@ -151,17 +152,21 @@ const PACKS = [
 const REMOVE_ADS_PRICE = 2.00; // quitar anuncios
 
 // ============================================================
-// 💳 PAGOS REALES — PAYPAL COLOMBIA (ya conectados)
+// 💳 PAGOS REALES — PAYPAL COLOMBIA CON RETORNO AUTOMÁTICO
 // ------------------------------------------------------------
-// Cada link abre PayPal con el monto YA escrito.
-// Como PayPal.Me no redirige con ?grant=, el jugador confirma
-// con el botón verde "YA PAGUÉ — ACTIVAR" (sistema de honor).
+// Al pagar, PayPal redirige al juego con ?grant=... y las
+// bombillas se activan SOLAS (tu código ya lee ese parámetro).
+// Ya NO existe el botón "YA PAGUÉ — ACTIVAR": todo es automático.
+//
+// ⚠️ Para que funcione, activa en PayPal:
+//    Configuración → Herramientas para vendedores →
+//    Pagos en el sitio web → Retorno automático (Auto Return)
 // ============================================================
 const PAYMENT_LINKS = {
-  pack10: "https://paypal.me/Yeison965/0.80USD",
-  pack50: "https://paypal.me/Yeison965/1USD",
-  pack200: "https://paypal.me/Yeison965/2USD",
-  removeAds: "https://paypal.me/Yeison965/2USD",
+  pack10: "https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=cordobadavid45@gmail.com&item_name=Pack+10+Bombillas&amount=0.80&currency_code=USD&return=https://la-bombilla-kappa.vercel.app/?grant=pack10",
+  pack50: "https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=cordobadavid45@gmail.com&item_name=Pack+50+Bombillas&amount=1.00&currency_code=USD&return=https://la-bombilla-kappa.vercel.app/?grant=pack50",
+  pack200: "https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=cordobadavid45@gmail.com&item_name=Pack+200+Bombillas&amount=2.00&currency_code=USD&return=https://la-bombilla-kappa.vercel.app/?grant=pack200",
+  removeAds: "https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=cordobadavid45@gmail.com&item_name=Quitar+Anuncios&amount=2.00&currency_code=USD&return=https://la-bombilla-kappa.vercel.app/?grant=removeAds",
 };
 
 // 💖 Tu página de apoyo (Patreon / Ko-fi). Vacío = avisa al pulsar.
@@ -229,6 +234,8 @@ const saveJSON = (key, v) => { try { localStorage.setItem(key, JSON.stringify(v)
 
 // ============================================================
 // SLIDER DE RAYITAS (5 posiciones, sin números)
+// value = índice 0..4, onChange devuelve el índice elegido.
+// Las rayitas son .tick y la línea deslizante es el thumb del input.
 // ============================================================
 const TickSlider = ({ value, onChange }) => (
   <div className="tick-slider">
@@ -256,7 +263,7 @@ function App() {
 
   // Estado de la escena: "off" | "on" | "broken"
   const [status, setStatus] = useState("off");
-  const statusRef = useRef("off"); // copia para el bucle de dibujo
+  const statusRef = useRef("off"); // copia para el bucle de dibujo (sin re-renders)
 
   // ---------- plata, roturas y pomodoros (persistidos) ----------
   const [money, setMoney] = useState(() => loadNum("ptb_money", 5));
@@ -264,21 +271,21 @@ function App() {
   const [pomodoros, setPomodoros] = useState(() => loadNum("ptb_pomodoros", 0));
 
   // ---------- economía / tienda ----------
-  const [bulbs, setBulbs] = useState(() => loadNum("ptb_bulbs", START_BULBS));
-  const [noAds, setNoAds] = useState(() => loadJSON("ptb_noads", false));
-  const [lastDaily, setLastDaily] = useState(() => loadNum("ptb_daily", 0));
-  const [shopOpen, setShopOpen] = useState(false);
+  const [bulbs, setBulbs] = useState(() => loadNum("ptb_bulbs", START_BULBS)); // inventario
+  const [noAds, setNoAds] = useState(() => loadJSON("ptb_noads", false));      // compró "sin anuncios"
+  const [lastDaily, setLastDaily] = useState(() => loadNum("ptb_daily", 0));    // última bombilla gratis
+  const [shopOpen, setShopOpen] = useState(false);   // panel de tienda abierto
   const [adState, setAdState] = useState(null);      // { left, mode } = house-ad activo
-  const [pendingGrant, setPendingGrant] = useState(null); // pack esperando "YA PAGUÉ"
 
   // ---------- logros ----------
   const [unlocked, setUnlocked] = useState(() => loadJSON("ptb_ach", []));
-  const unlockedRef = useRef(unlocked);
-  const [toast, setToast] = useState(null);
-  const toastT = useRef(null);
-  const [pomodoroNotice, setPomodoroNotice] = useState(false);
+  const unlockedRef = useRef(unlocked); // lista espejo para chequeos rápidos
+  const [toast, setToast] = useState(null); // cartelito superior
+  const toastT = useRef(null);              // timeout del cartelito
+  const [pomodoroNotice, setPomodoroNotice] = useState(false); // aviso gigante de descanso
 
   // ---------- helpers de economía (estables, los usa el motor) ----------
+  // suma plata y guarda
   const addMoney = useCallback((n) => {
     setMoney((m) => {
       const next = m + n;
@@ -287,6 +294,7 @@ function App() {
     });
   }, []);
 
+  // suma/resta bombillas del inventario y guarda
   const addBulbs = useCallback((n) => {
     setBulbs((b) => {
       const next = Math.max(0, b + n);
@@ -295,6 +303,7 @@ function App() {
     });
   }, []);
 
+  // muestra un cartelito temporal
   const showToast = useCallback((msg) => {
     setToast(msg);
     clearTimeout(toastT.current);
@@ -340,11 +349,18 @@ function App() {
       }
     };
     check();
-    const id = setInterval(check, 30000);
+    const id = setInterval(check, 30000); // revisa cada 30s por si dejaste la pestaña abierta
     return () => clearInterval(id);
   }, [lastDaily, showToast]);
 
-  // ---------- activación por URL (?grant=...) por si usas Stripe/Wompi después ----------
+  // ============================================================
+  // 💳 ACTIVACIÓN AUTOMÁTICA DE PAGOS
+  // ------------------------------------------------------------
+  // Cuando el jugador paga en PayPal, regresa al juego con la URL
+  // cargada de ?grant=pack10 (o pack50 / pack200 / removeAds).
+  // Este efecto lee ese parámetro, entrega la recompensa, y limpia
+  // la URL para que al recargar no se entregue dos veces.
+  // ============================================================
   useEffect(() => {
     try {
       const params = new URLSearchParams(window.location.search);
@@ -361,6 +377,7 @@ function App() {
             showToast(`GRACIAS: +${pack.bulbs} BOMBILLAS`);
           }
         }
+        // limpia ?grant= de la URL sin recargar la página
         params.delete("grant");
         const qs = params.toString();
         window.history.replaceState({}, "", window.location.pathname + (qs ? `?${qs}` : ""));
@@ -403,18 +420,18 @@ function App() {
       text: s?.text ?? true,
       storm: s?.storm ?? true,
       size: {
-        text: s?.size?.text ?? SIZE_DEFAULT,
-        bulb: s?.size?.bulb ?? SIZE_DEFAULT,
-        fly: s?.size?.fly ?? SIZE_DEFAULT,
-        ui: s?.size?.ui ?? SIZE_DEFAULT,
+        text: s?.size?.text ?? SIZE_DEFAULT, // slider TEXTO
+        bulb: s?.size?.bulb ?? SIZE_DEFAULT, // slider BOMBILLA (+cuerda)
+        fly: s?.size?.fly ?? SIZE_DEFAULT,   // slider LUCIÉRNAGAS
+        ui: s?.size?.ui ?? SIZE_DEFAULT,     // slider INTERFAZ
       },
       vol: { music: 0.5, sfx: 0.8, amb: 0.5, ...(s?.vol || {}) },
     };
   });
-  const sfxRef = useRef(settings.sfx);
-  const volRef = useRef(settings.vol);
-  const stormRef = useRef(settings.storm);
-  const sizeRef = useRef({ bulb: 1, fly: 1 });
+  const sfxRef = useRef(settings.sfx);     // ¿efectos encendidos? (lo lee el motor)
+  const volRef = useRef(settings.vol);     // volúmenes (los lee el motor)
+  const stormRef = useRef(settings.storm); // ¿tormenta activada? (lo lee el motor)
+  const sizeRef = useRef({ bulb: 1, fly: 1 }); // escalas (las lee el motor)
 
   useEffect(() => {
     saveJSON("ptb_settings", settings);
@@ -429,16 +446,16 @@ function App() {
 
   // ---------- estados de UI ----------
   const [menuOpen, setMenuOpen] = useState(false);
-  const [sizeOpen, setSizeOpen] = useState(false);
-  const [achOpen, setAchOpen] = useState(false);
-  const [confirmReset, setConfirmReset] = useState(false);
+  const [sizeOpen, setSizeOpen] = useState(false);   // sub-menú TAMAÑO
+  const [achOpen, setAchOpen] = useState(false);     // panel de logros
+  const [confirmReset, setConfirmReset] = useState(false); // 2º click = confirmar reset
   const confirmT = useRef(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   const setSize = (key, idx) =>
     setSettings((s) => ({ ...s, size: { ...s.size, [key]: idx } }));
 
-  // ---------- tamaño del frame (siempre 16:9, centrado) ----------
+  // ---------- tamaño del frame (siempre 16:9, centrado en la ventana) ----------
   const [frame, setFrame] = useState({ w: DESIGN_W, h: DESIGN_H });
   useEffect(() => {
     const f = () => {
@@ -455,13 +472,15 @@ function App() {
   }, []);
 
   // ---------- tamaños de texto ----------
+  // INTERFAZ = HUD/menú/toast/logros (--ui-size)
+  // TEXTO = mensajes centrales (--game-text)
   const uiSize = Math.max(6, Math.round(UI_TEXT_SIZE * (SIZE_STEPS[settings.size.ui] ?? 1)));
   const textSize = Math.max(6, Math.round(UI_TEXT_SIZE * (SIZE_STEPS[settings.size.text] ?? 1)));
 
   // ---------- audio: música + ambiente ----------
   const musicRef = useRef(null);
   const ambRef = useRef(null);
-  const [started, setStarted] = useState(false);
+  const [started, setStarted] = useState(false); // primer gesto = autoplay permitido
 
   useEffect(() => {
     const f = () => setStarted(true);
@@ -469,6 +488,7 @@ function App() {
     return () => window.removeEventListener("pointerdown", f);
   }, []);
 
+  // Reproducción de música (el volumen va aparte para no reiniciar)
   useEffect(() => {
     if (!musicRef.current) {
       musicRef.current = new Audio();
@@ -498,6 +518,7 @@ function App() {
     if (musicRef.current) musicRef.current.volume = settings.vol.music;
   }, [settings.vol.music]);
 
+  // Ambiente (clima): lluvia / noche / nada
   useEffect(() => {
     if (!ambRef.current) {
       ambRef.current = new Audio();
@@ -515,11 +536,13 @@ function App() {
     if (ambRef.current) ambRef.current.volume = settings.vol.amb;
   }, [settings.vol.amb]);
 
+  // Limpieza al desmontar: silenciar todo
   useEffect(() => () => {
     if (musicRef.current) musicRef.current.pause();
     if (ambRef.current) ambRef.current.pause();
   }, []);
 
+  // ---------- estado de pantalla completa ----------
   useEffect(() => {
     const f = () => setIsFullscreen(!!document.fullscreenElement);
     document.addEventListener("fullscreenchange", f);
@@ -549,13 +572,14 @@ function App() {
     let viewW = DESIGN_W, viewH = DESIGN_H;
 
     // ---------- layout de la habitación ----------
-    let roomR = [0, 0, 0, 0];
-    let bandTop = 0, bandH = 0, bandBottom = 0;
+    let roomR = [0, 0, 0, 0]; // rect [x, y, w, h]
+    let bandTop = 0, bandH = 0, bandBottom = 0; // franja vertical de la habitación
     let pix = PIXEL;
+    // Tamaños escalables por los sliders del menú
     let bulbR = BULB_RADIUS, pullS = PULL_SIZE, ropeT = ROPE_THICKNESS, catS = CAT_SIZE, ffScale = 1;
-    let lastBulb = -1, lastFly = -1;
+    let lastBulb = -1, lastFly = -1; // detectan cambios de slider
 
-    // cámara del modo fiesta
+    // cámara del modo fiesta (bombeo)
     let camPulse = 0;
     let wasRainbow = false;
     let partyAudio = null;
@@ -570,7 +594,7 @@ function App() {
     let idleAccum = 0;
 
     const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-    const bandY = (r) => bandTop + bandH * r;
+    const bandY = (r) => bandTop + bandH * r; // fracción → Y dentro de la habitación
 
     const roomRect = () => {
       const iw = room.naturalWidth || 16, ih = room.naturalHeight || 9;
@@ -579,17 +603,18 @@ function App() {
       return [(viewW - dw) / 2, (viewH - dh) / 2, dw, dh];
     };
 
+    // recalcula franja + tamaños (sliders y carga de imagen)
     const refreshLayout = () => {
       roomR = roomRect();
       bandTop = roomR[1];
       bandH = roomR[3];
       bandBottom = bandTop + bandH;
       pix = PIXEL;
-      bulbR = BULB_RADIUS * sizeRef.current.bulb;
-      ropeT = Math.max(1, ROPE_THICKNESS * sizeRef.current.bulb);
-      pullS = PULL_SIZE * sizeRef.current.bulb;
-      catS = CAT_SIZE;
-      ffScale = sizeRef.current.fly;
+      bulbR = BULB_RADIUS * sizeRef.current.bulb;             // bombilla
+      ropeT = Math.max(1, ROPE_THICKNESS * sizeRef.current.bulb); // grosor de cuerda
+      pullS = PULL_SIZE * sizeRef.current.bulb;               // tirador
+      catS = CAT_SIZE;                                         // gato no escala
+      ffScale = sizeRef.current.fly;                           // luciérnagas
       if (cat) cat.y = clamp(cat.y, bandY(CAT_FLOOR_MIN), bandY(CAT_FLOOR_MAX));
     };
 
@@ -620,6 +645,7 @@ function App() {
 
     let eventTimer = EVENT_MIN_INTERVAL + Math.random() * (EVENT_MAX_INTERVAL - EVENT_MIN_INTERVAL);
 
+    // estadísticas persistidas (para logros)
     let stats = {
       pulls: 0, meows: 0, rainbows: 0, storms: 0, events: 0, lit: 0, age: 0, moths: 0,
       ...loadJSON("ptb_stats", {}),
@@ -630,19 +656,19 @@ function App() {
     let ons = 0, softStreak = 0;
     let brokenCount = loadNum("ptb_broken", 0);
 
-    let points = [];
-    let fireflies = [];
-    let shards = [];
-    let sparks = [];
-    let dust = [];
-    let boomRing = 0, boomX = 0, boomY = 0;
+    let points = [];    // segmentos de la cuerda (verlet)
+    let fireflies = []; // luciérnagas
+    let shards = [];    // vidrios de la explosión
+    let sparks = [];    // chispas brillantes
+    let dust = [];      // motas de polvo
+    let boomRing = 0, boomX = 0, boomY = 0; // anillo de estallido
 
     let cat = null;
 
     const mix = (a, b, t) => a.map((c, i) => Math.round(c + (b[i] - c) * t));
     const rgb = (c) => `rgb(${c[0]},${c[1]},${c[2]})`;
     const bulbBase = () => ({ x: viewW / 2, y: bandY(BULB_Y_RATIO) });
-    const hueNow = () => (timeSec * 140) % 360;
+    const hueNow = () => (timeSec * 140) % 360; // color ciclando del arcoíris
 
     const ropeNaturalLength = () =>
       bandY(ROPE_END_RATIO) - (bandY(BULB_Y_RATIO) + bulbR);
@@ -664,7 +690,7 @@ function App() {
         dir: -1,
         state: "idle",
         timer: 0,
-        walkPhase: 0, // ¡dos puntos, no signo igual!
+        walkPhase: 0, // ¡OJO: dos puntos, no signo igual!
         blinkTimer: 2 + Math.random() * 3,
         hop: 0,
         gone: false,
@@ -675,7 +701,7 @@ function App() {
     // SONIDO — WebAudio (respaldo) + archivos mp3 con volumen global
     // ============================================================
     let audioCtx = null;
-    let sfxBus = null;
+    let sfxBus = null; // ganancia MAESTRA de los efectos procedurales
 
     const ensureAudio = () => {
       if (!audioCtx) {
@@ -695,9 +721,10 @@ function App() {
       return src;
     };
 
+    // Reproductor de SFX con archivo mp3 + fallback procedural
     const sfxCache = {};
     const playSfx = (name, vol, fallback) => {
-      if (!sfxRef.current) return;
+      if (!sfxRef.current) return; // efectos apagados en el menú
       if (!sfxCache[name]) {
         const a = new Audio(`/audio/sfx/${name}.mp3`);
         a.preload = "auto";
@@ -709,6 +736,7 @@ function App() {
       if (p) p.catch(() => { if (fallback) fallback(); });
     };
 
+    // MÚSICA DE FIESTA: arranca al entrar y se detiene al salir del modo
     const startPartyMusic = () => {
       if (!partyAudio) {
         partyAudio = new Audio(PARTY_MUSIC_FILE);
@@ -716,12 +744,13 @@ function App() {
       }
       partyAudio.volume = volRef.current.music;
       try { partyAudio.currentTime = 0; } catch {}
-      partyAudio.play().catch(() => {});
+      partyAudio.play().catch(() => {}); // si no existe el mp3, simplemente no suena
     };
     const stopPartyMusic = () => {
       if (partyAudio) partyAudio.pause();
     };
 
+    // sonido al atrapar la polilla (subida brillante)
     const procMothCatch = () => {
       if (!audioCtx) return;
       const t = audioCtx.currentTime;
@@ -737,6 +766,7 @@ function App() {
       o.stop(t + 0.35);
     };
 
+    // campanita del pomodoro (3 notas suaves)
     const procPomodoro = () => {
       if (!audioCtx) return;
       const t = audioCtx.currentTime;
@@ -918,6 +948,7 @@ function App() {
       osc.stop(t + 0.3);
     };
 
+    // wrappers: archivo primero, procedural si falta
     const playClickSfx = (on) => playSfx("click", 0.9, () => procClick(on));
     const playBreakSfx = () => playSfx("break", 1, procBreak);
     const playThunderSfx = () => playSfx("thunder", 0.9, procThunder);
@@ -925,6 +956,7 @@ function App() {
     const playMothCatchSfx = () => playSfx("moth", 0.8, procMothCatch);
     const playPomodoroSfx = () => playSfx("pomodoro", 0.7, procPomodoro);
 
+    // cristalitos al jalar fuerte (zona de advertencia)
     const updateGlassSound = () => {
       if (!dragging) return;
       if (statusRef.current === "broken") return;
@@ -957,7 +989,7 @@ function App() {
     };
 
     const updateStorm = (dt) => {
-      if (!stormRef.current) return;
+      if (!stormRef.current) return; // tormenta apagada en el menú
 
       stormTimer -= dt;
       if (stormTimer <= 0 && lightningTime <= 0) {
@@ -1029,8 +1061,8 @@ function App() {
     const createRope = (broken = false) => {
       const { x } = bulbBase();
       const startY = broken
-        ? bandY(BULB_Y_RATIO) - bulbR
-        : bandY(BULB_Y_RATIO) + bulbR;
+        ? bandY(BULB_Y_RATIO) - bulbR   // rota: cuelga del casquillo
+        : bandY(BULB_Y_RATIO) + bulbR;  // sana: del borde inferior
       const endY = broken ? startY + ropeNaturalLength() : bandY(ROPE_END_RATIO);
       const len = (endY - startY) / (ROPE_SEGMENTS - 1);
       points = [];
@@ -1168,7 +1200,7 @@ function App() {
         vx: (Math.random() - 0.5) * MOTH_SPEED * 2,
         vy: (Math.random() - 0.5) * MOTH_SPEED * 2,
         wingPhase: Math.random() * Math.PI * 2,
-        life: 20,
+        life: 20, // segundos de vida si no la atrapas
       };
     };
 
@@ -1182,9 +1214,10 @@ function App() {
         return;
       }
 
-      moth.wingPhase += dt * 20;
+      moth.wingPhase += dt * 20; // aleteo
       moth.life -= dt;
 
+      // vuelo errático con tope de velocidad
       moth.vx += (Math.random() - 0.5) * 0.3;
       moth.vy += (Math.random() - 0.5) * 0.3;
       const speed = Math.hypot(moth.vx, moth.vy);
@@ -1196,6 +1229,7 @@ function App() {
       moth.x += moth.vx;
       moth.y += moth.vy;
 
+      // rebotes en los bordes
       if (moth.x < 20 || moth.x > viewW - 20) moth.vx *= -1;
       if (moth.y < 20 || moth.y > viewH - 20) moth.vy *= -1;
 
@@ -1203,17 +1237,18 @@ function App() {
       moth.y = clamp(moth.y, 20, viewH - 20);
 
       if (moth.life <= 0) {
-        moth = null;
+        moth = null; // se fue sin que la atraparas
       }
     };
 
     const drawMoth = () => {
       if (!moth) return;
-      mothGlow = (Math.sin(timeSec * 3) + 1) * 0.5;
+      mothGlow = (Math.sin(timeSec * 3) + 1) * 0.5; // brillo pulsante
 
       ctx.save();
       ctx.translate(moth.x, moth.y);
 
+      // aura dorada aditiva
       ctx.globalCompositeOperation = "lighter";
       ctx.globalAlpha = 0.3 + mothGlow * 0.2;
       const aura = ctx.createRadialGradient(0, 0, 1, 0, 0, MOTH_SIZE * 2.5);
@@ -1224,6 +1259,7 @@ function App() {
       ctx.arc(0, 0, MOTH_SIZE * 2.5, 0, Math.PI * 2);
       ctx.fill();
 
+      // alas que aletean
       ctx.globalCompositeOperation = "source-over";
       ctx.globalAlpha = 0.9;
       const wingAngle = Math.sin(moth.wingPhase) * 0.8;
@@ -1243,6 +1279,7 @@ function App() {
       ctx.fill();
       ctx.restore();
 
+      // cuerpo
       ctx.fillStyle = "#daa520";
       ctx.beginPath();
       ctx.ellipse(0, 0, MOTH_SIZE * 0.3, MOTH_SIZE * 0.5, 0, 0, Math.PI * 2);
@@ -1251,6 +1288,7 @@ function App() {
       ctx.restore();
     };
 
+    // click sobre la polilla = +$10 y logro
     const catchMoth = () => {
       if (!moth) return false;
       const d = Math.hypot(mouseX - moth.x, mouseY - moth.y);
@@ -1278,12 +1316,14 @@ function App() {
 
       if (cat.hop > 0) cat.hop = Math.max(0, cat.hop - dt * 2.5);
 
+      // MODO FIESTA: el gato baila al ritmo
       if (st === "on" && rainbowTime > 0) {
         cat.state = "dance";
-        cat.walkPhase += dt * 14;
-        cat.dir = Math.sin(timeSec * PARTY_PULSE_SPEED) >= 0 ? 1 : -1;
+        cat.walkPhase += dt * 14; // patitas rápidas
+        cat.dir = Math.sin(timeSec * PARTY_PULSE_SPEED) >= 0 ? 1 : -1; // cambia de lado al beat
         return;
       }
+      // se acabó la fiesta: vuelve a su rutina
       if (cat.state === "dance") {
         cat.state = st === "on" ? "sit" : "idle";
         cat.timer = 1;
@@ -1323,7 +1363,7 @@ function App() {
           } else {
             cat.dir = dx > 0 ? 1 : -1;
             cat.x += Math.sign(dx) * speed;
-            cat.y += clamp(dy, -1, 1) * speed * 0.5;
+            cat.y += clamp(dy, -1, 1) * speed * 0.5; // sube/baja SUAVE, sin saltos
             cat.walkPhase += dt * 10;
           }
 
@@ -1341,6 +1381,7 @@ function App() {
       const st = statusRef.current;
       const showBody = st === "on" && cat.state !== "idle";
 
+      // profundidad: más chico lejos (arriba), más grande cerca (abajo)
       const depthT = clamp(
         (cat.y - bandY(CAT_FLOOR_MIN)) / (bandY(CAT_FLOOR_MAX) - bandY(CAT_FLOOR_MIN)),
         0, 1
@@ -1348,6 +1389,7 @@ function App() {
       const depthScale = 0.75 + 0.45 * depthT;
       const u = (catS / 10) * depthScale;
 
+      // baile: saltos al beat, balanceo y giro ligero
       const dancing = cat.state === "dance";
       const beat = timeSec * PARTY_DANCE_SPEED;
       const danceHop = dancing ? -Math.abs(Math.sin(beat)) * u * 2.0 : 0;
@@ -1368,6 +1410,7 @@ function App() {
       const body = "#1c1610";
 
       if (showBody) {
+        // cola que se mece
         ctx.strokeStyle = body;
         ctx.lineWidth = u * 0.8;
         ctx.lineCap = "round";
@@ -1379,21 +1422,25 @@ function App() {
         );
         ctx.stroke();
 
+        // patitas con ciclo de caminar
         ctx.fillStyle = body;
         ctx.fillRect(-u * 2.4 + swing * u * 0.6, -u * 1.2, u * 0.9, u * 1.4);
         ctx.fillRect(-u * 1.2 - swing * u * 0.6, -u * 1.2, u * 0.9, u * 1.4);
         ctx.fillRect(u * 1.0 - swing * u * 0.6, -u * 1.2, u * 0.9, u * 1.4);
         ctx.fillRect(u * 2.0 + swing * u * 0.6, -u * 1.2, u * 0.9, u * 1.4);
 
+        // cuerpo + cabeza + orejas
         ctx.fillRect(-u * 2.8, -u * 2.6 - bob, u * 5.6, u * 1.8);
         ctx.fillRect(u * 1.6, -u * 4.2 - bob, u * 2.6, u * 2.2);
         ctx.fillRect(u * 1.7, -u * 5.0 - bob, u * 0.8, u * 0.9);
         ctx.fillRect(u * 3.2, -u * 5.0 - bob, u * 0.8, u * 0.9);
 
+        // brillo cálido del lomo (luz de la bombilla)
         ctx.fillStyle = "rgba(255,190,110,0.22)";
         ctx.fillRect(-u * 2.8, -u * 2.6 - bob, u * 5.6, u * 0.4);
         ctx.fillRect(u * 1.6, -u * 4.2 - bob, u * 2.6, u * 0.4);
 
+        // ojos brillantes
         ctx.fillStyle = "#ffd54a";
         ctx.shadowColor = "rgba(255,213,74,0.8)";
         ctx.shadowBlur = 6;
@@ -1401,6 +1448,7 @@ function App() {
         ctx.fillRect(u * 3.3, -u * 3.4 - bob, u * 0.6, u * 0.6);
         ctx.shadowBlur = 0;
       } else {
+        // apagado: solo los ojos (con parpadeo)
         if (cat.blinkTimer > 0) {
           ctx.fillStyle = "#ffd54a";
           ctx.shadowColor = "rgba(255,213,74,0.9)";
@@ -1447,7 +1495,7 @@ function App() {
       boomY = y;
       boomRing = 1;
 
-      const k = bulbR / 60;
+      const k = bulbR / 60; // factor de escala de la explosión
 
       shards = [];
       for (let i = 0; i < BOOM_SHARDS; i++) {
@@ -1530,7 +1578,7 @@ function App() {
     };
 
     // ============================================================
-    // MOUSE — mapea pantalla → coordenadas de diseño
+    // MOUSE — mapea pantalla → coordenadas de diseño (compensa el zoom de cámara)
     // ============================================================
     const updateMouse = (e) => {
       const r = canvas.getBoundingClientRect();
@@ -1555,7 +1603,7 @@ function App() {
       const end = points[points.length - 1];
       const nearRope = !!end && Math.hypot(mouseX - end.x, mouseY - end.y) < pullS * 3;
 
-      // 2) acariciar al gato SOLO si no estás agarrando la cuerda
+      // 2) acariciar al gato SOLO si no estás intentando agarrar la cuerda
       if (!nearRope && cat && !cat.gone) {
         const cy = cat.y - catS * 0.3;
         if (Math.hypot(mouseX - cat.x, mouseY - cy) < catS * 1.2) {
@@ -1644,6 +1692,7 @@ function App() {
       dragging = false;
       canvas.style.cursor = "default";
 
+      // amortiguación al soltar (evita que la cuerda rebote rara)
       for (let i = 1; i < points.length; i++) {
         const p = points[i];
         p.oldX = p.x - (p.x - p.oldX) * ROPE_DAMPING;
@@ -2131,6 +2180,7 @@ function App() {
     // RENDER — bucle principal a 60fps
     // ============================================================
     const draw = () => {
+      // si moviste los sliders de bombilla/luciérnagas, recalcula al vuelo
       if (
         room.complete &&
         (sizeRef.current.bulb !== lastBulb || sizeRef.current.fly !== lastFly)
@@ -2145,7 +2195,7 @@ function App() {
       ctx.fillStyle = "#000";
       ctx.fillRect(0, 0, viewW, viewH);
 
-      // CÁMARA DEL MODO FIESTA
+      // CÁMARA DEL MODO FIESTA: bombeo que se acerca y vuelve varias veces
       camPulse = rainbowTime > 0
         ? Math.max(0, Math.sin(timeSec * PARTY_PULSE_SPEED)) * PARTY_PULSE_AMOUNT
         : 0;
@@ -2200,7 +2250,7 @@ function App() {
 
       if (rainbowTime > 0) rainbowTime -= dt;
 
-      // MÚSICA DE FIESTA
+      // MÚSICA DE FIESTA: arranca al entrar y se detiene al salir del modo
       if (rainbowTime > 0 && !wasRainbow) {
         wasRainbow = true;
         startPartyMusic();
@@ -2218,6 +2268,7 @@ function App() {
       if (lastStatus === "on" && st === "off") disperseFireflies();
       if (lastStatus === "broken" && st !== "broken") {
         createRope(false);
+        // el gato vuelve entrando caminando por una orilla (sin teleport)
         if (cat && cat.gone) {
           cat.gone = false;
           cat.state = "walk";
@@ -2261,7 +2312,7 @@ function App() {
       const bulbOn = st === "on" && (flickerTime <= 0 || Math.sin(flickerTime * 30) > 0);
 
       if (bulbOn) {
-        const dim = 1 - (stats.age / 100) * 0.45;
+        const dim = 1 - (stats.age / 100) * 0.45; // vejez = luz más tenue
         ctx.globalAlpha = (1 - shake * Math.random() * 0.8) * dim;
         drawConeAura(bx, by);
         drawBeam(bx, by);
@@ -2358,6 +2409,7 @@ function App() {
       });
       return;
     }
+    // house-ad: promo real de tu Patreon/tienda
     setAdState({ left: AD_HOUSE_SECONDS, mode });
   };
 
@@ -2400,15 +2452,24 @@ function App() {
     showRewardedAd("reset");
   };
 
-  // compras REALES por PayPal: abren el link con el monto ya escrito
+  // ============================================================
+  // 💳 COMPRA REAL POR PAYPAL (SIN BOTÓN DE HONOR)
+  // ------------------------------------------------------------
+  // Al hacer click:
+  //  1) muestra toast "ABRIENDO PAYPAL..."
+  //  2) abre PayPal en pestaña nueva con el monto ya escrito
+  //  3) al terminar el pago, PayPal redirige al juego con ?grant=...
+  //  4) el useEffect de activación entrega las bombillas solo
+  // Ya NO existe el botón "YA PAGUÉ — ACTIVAR".
+  // ============================================================
   const buyPack = (pack) => {
     const link = PAYMENT_LINKS[pack.id];
     if (!link) {
       showToast("CONFIGURA TU LINK DE PAGO (PAYMENT_LINKS)");
       return;
     }
+    showToast("ABRIENDO PAYPAL...");
     window.open(link, "_blank");
-    setPendingGrant(pack.id); // aparece el botón "YA PAGUÉ — ACTIVAR"
   };
 
   const buyRemoveAds = () => {
@@ -2417,24 +2478,8 @@ function App() {
       showToast("CONFIGURA TU LINK DE PAGO (PAYMENT_LINKS)");
       return;
     }
+    showToast("ABRIENDO PAYPAL...");
     window.open(link, "_blank");
-    setPendingGrant("removeAds");
-  };
-
-  // sistema de honor: el jugador confirma que ya pagó
-  const confirmPending = () => {
-    if (pendingGrant === "removeAds") {
-      setNoAds(true);
-      saveJSON("ptb_noads", true);
-      showToast("GRACIAS: ANUNCIOS DESACTIVADOS");
-    } else {
-      const pack = PACKS.find((p) => p.id === pendingGrant);
-      if (pack) {
-        addBulbs(pack.bulbs);
-        showToast(`GRACIAS: +${pack.bulbs} BOMBILLAS`);
-      }
-    }
-    setPendingGrant(null);
   };
 
   const openPatreon = () => {
@@ -2463,6 +2508,7 @@ function App() {
   // ============================================================
   return (
     <main className="scene">
+      {/* escenario 16:9 centrado; el CSS lo escala como una imagen */}
       <div
         className="frame"
         style={{
@@ -2701,11 +2747,9 @@ function App() {
                     💡 {p.bulbs} bombillas · ${p.price.toFixed(2)}
                   </button>
                 ))}
-                {pendingGrant && pendingGrant !== "removeAds" && (
-                  <button className="shop-btn reward" onClick={confirmPending}>
-                    ✅ YA PAGUÉ — ACTIVAR
-                  </button>
-                )}
+                {/* Ya NO está el botón "YA PAGUÉ — ACTIVAR": al pagar,
+                    PayPal regresa solo al juego y se activa. */}
+                <p className="shop-hint">🔒 Al pagar, PayPal te regresa al juego y se activa solo.</p>
               </div>
 
               {!noAds && (
@@ -2713,11 +2757,6 @@ function App() {
                   <button className="shop-btn premium" onClick={buyRemoveAds}>
                     ⭐ QUITAR ANUNCIOS · ${REMOVE_ADS_PRICE.toFixed(2)}
                   </button>
-                  {pendingGrant === "removeAds" && (
-                    <button className="shop-btn reward" onClick={confirmPending}>
-                      ✅ YA PAGUÉ — ACTIVAR
-                    </button>
-                  )}
                 </div>
               )}
 
