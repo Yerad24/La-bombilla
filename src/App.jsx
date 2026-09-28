@@ -113,12 +113,12 @@ const IDLE_INCOME_SECONDS = 300;
 const IDLE_INCOME_AMOUNT = 1;
 const DAILY_FREE_BULBS = 1;
 const MAX_BULB_STOCK = 10;
-const AD_HOUSE_SECONDS = 5;
-const RESET_GIFT_BULBS = 2;
+const AD_HOUSE_SECONDS = 5;      // house-ad de respaldo si no hay RESET_LINK
+const RESET_GIFT_BULBS = 2;      // regalo al resetear
 const RESET_GIFT_MONEY = 10;
 
 // ============================================================
-// 🔗 ENLACES DE LA TIENDA (solo 3)
+// 🔗 ENLACES DE LA TIENDA / MONETIZACIÓN
 // ============================================================
 
 // Patreon: apoyo mensual, aparece en COLABORADORES
@@ -128,7 +128,12 @@ const PATREON_URL = "https://www.patreon.com/Pix_World";
 const PAYPAL_URL = "https://paypal.me/Yeison965";
 
 // Enlace acortador para ganar 10 bombillas
+// (destino en ouo.io: https://la-bombilla-kappa.vercel.app/?grant=bulb10)
 const BULB_LINK = "https://ouo.io/J2EfGA";
+
+// 🔗 Enlace acortador para RESETEAR TODO.
+
+const RESET_LINK = "https://ouo.io/t6i2Ix";
 
 // ============================================================
 // 💛 COLABORADORES — gente que dona en Patreon
@@ -225,7 +230,7 @@ function App() {
   const [bulbs, setBulbs] = useState(() => loadNum("ptb_bulbs", START_BULBS));
   const [lastDaily, setLastDaily] = useState(() => loadNum("ptb_daily", 0));
   const [shopOpen, setShopOpen] = useState(false);
-  const [adState, setAdState] = useState(null);
+  const [adState, setAdState] = useState(null); // house-ad de respaldo
 
   const [unlocked, setUnlocked] = useState(() => loadJSON("ptb_ach", []));
   const unlockedRef = useRef(unlocked);
@@ -272,6 +277,17 @@ function App() {
     addMoney(1);
   }, [addMoney, showToast]);
 
+  // ---------- RESETEO CON REGALO (lo dispara ?grant=reset o el house-ad) ----------
+  const doReset = useCallback(() => {
+    try {
+      ["ptb_money", "ptb_broken", "ptb_ach", "ptb_stats", "ptb_pomodoros", "ptb_daily", "ptb_bulbs"]
+        .forEach((k) => localStorage.removeItem(k));
+      saveNum("ptb_bulbs", RESET_GIFT_BULBS);
+      saveNum("ptb_money", RESET_GIFT_MONEY);
+    } catch {}
+    window.location.reload();
+  }, []);
+
   useEffect(() => {
     if (money >= 10) unlock("ahorrativo", "AHORRATIVO");
     if (money <= 0) unlock("derrochador", "SIN FONDO");
@@ -303,22 +319,29 @@ function App() {
   }, [lastDaily, showToast]);
 
   // ============================================================
-  // 🔗 ENTREGA AUTOMÁTICA POR ENLACE ACORTADOR
+  // 🔗 ENTREGA AUTOMÁTICA POR ENLACES ACORTADORES
+  // ?grant=bulb10 → +10 bombillas · ?grant=reset → reseteo con regalo
+  // Se limpia la URL ANTES de actuar para que no se repita al recargar.
   // ============================================================
   useEffect(() => {
     try {
       const params = new URLSearchParams(window.location.search);
       const grant = params.get("grant");
+      if (!grant) return;
+      params.delete("grant");
+      const qs = params.toString();
+      window.history.replaceState({}, "", window.location.pathname + (qs ? `?${qs}` : ""));
       if (grant === "bulb10") {
         addBulbs(10);
-        showToast(`GRACIAS: +10 BOMBILLAS`);
-        params.delete("grant");
-        const qs = params.toString();
-        window.history.replaceState({}, "", window.location.pathname + (qs ? `?${qs}` : ""));
+        showToast("GRACIAS: +10 BOMBILLAS");
+      } else if (grant === "reset") {
+        showToast("RESETEANDO CON REGALO...");
+        doReset();
       }
     } catch {}
-  }, [addBulbs, showToast]);
+  }, [addBulbs, showToast, doReset]);
 
+  // ---------- countdown del house-ad de respaldo ----------
   useEffect(() => {
     if (!adState || adState.left <= 0) return;
     const id = setTimeout(
@@ -453,6 +476,9 @@ function App() {
     statusRef.current = status;
   }, [status]);
 
+  // ============================================================
+  // MOTOR DEL JUEGO
+  // ============================================================
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -2169,6 +2195,10 @@ function App() {
     };
   }, [unlock, addMoney, showToast]);
 
+  // ============================================================
+  // ECONOMÍA / TIENDA / COLABORADORES / RESETEO
+  // ============================================================
+
   const bulbPrice = brokenTotal >= START_BULBS ? BULB_PRICE_AFTER : BULB_PRICE_BASE;
 
   const changeBulb = () => {
@@ -2204,6 +2234,7 @@ function App() {
     }
   };
 
+  // house-ad de respaldo (solo si RESET_LINK está vacío)
   const showHouseAd = () => {
     setMenuOpen(false);
     setAdState({ left: AD_HOUSE_SECONDS });
@@ -2214,16 +2245,7 @@ function App() {
     doReset();
   };
 
-  const doReset = () => {
-    try {
-      ["ptb_money", "ptb_broken", "ptb_ach", "ptb_stats", "ptb_pomodoros", "ptb_daily", "ptb_bulbs"]
-        .forEach((k) => localStorage.removeItem(k));
-      saveNum("ptb_bulbs", RESET_GIFT_BULBS);
-      saveNum("ptb_money", RESET_GIFT_MONEY);
-    } catch {}
-    window.location.reload();
-  };
-
+  // RESETEAR TODO: confirmar → enlace ouo → al volver (?grant=reset) se resetea solo
   const resetAll = () => {
     if (!confirmReset) {
       setConfirmReset(true);
@@ -2232,7 +2254,13 @@ function App() {
       return;
     }
     setConfirmReset(false);
-    showHouseAd();
+    setMenuOpen(false);
+    if (RESET_LINK) {
+      showToast("COMPLETA EL ENLACE PARA RESETEAR...");
+      window.open(RESET_LINK, "_blank");
+    } else {
+      showHouseAd(); // respaldo sin enlace configurado
+    }
   };
 
   const forgiveDebt = () => {
@@ -2444,7 +2472,7 @@ function App() {
 
         {toast && <div className="toast">{toast}</div>}
 
-        {/* ---------- TIENDA SIMPLIFICADA (3 enlaces) ---------- */}
+        {/* ---------- TIENDA (3 enlaces) ---------- */}
         {shopOpen && (
           <div className="overlay" onClick={() => setShopOpen(false)}>
             <div className="shop-panel" onClick={(e) => e.stopPropagation()}>
@@ -2491,7 +2519,7 @@ function App() {
           </div>
         )}
 
-        {/* ---------- HOUSE-AD (peaje de reseteo + promo Patreon) ---------- */}
+        {/* ---------- HOUSE-AD de respaldo (solo si RESET_LINK está vacío) ---------- */}
         {adState && (
           <div className="overlay ad-overlay">
             <div className="ad-box">
