@@ -113,7 +113,7 @@ const AGE_FULL_TIME = 600; // segundos de luz para llegar al 100% de vejez
 
 // ---------- MODO FIESTA (arcoíris) ----------
 const RAINBOW_CLICKS = 7;        // clicks seguidos en la bombilla para activarlo
-const RAINBOW_TIME = 25.29;      // segundos que dura
+const RAINBOW_TIME = 25.20;      // segundos que dura
 const PARTY_PULSE_SPEED = 6;     // velocidad del bombeo de cámara
 const PARTY_PULSE_AMOUNT = 0.09; // cuánto se acerca la cámara (9%)
 const PARTY_DANCE_SPEED = 8;     // velocidad del baile del gato
